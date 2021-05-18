@@ -71,6 +71,8 @@ public class PlayerController2D : MonoBehaviour
         {
             rb.AddForce(Vector2.up * jumpSpeed);
             animator.Play("PlayerJumpUpAnimation");
+            jump = false;
+            isGrounded = false;
         }
     }
 }
