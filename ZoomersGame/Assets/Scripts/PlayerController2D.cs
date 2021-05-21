@@ -5,10 +5,14 @@ public class PlayerController2D : MonoBehaviour
     Animator animator;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
-    private bool moveLeft, moveRight, jump, isGrounded, canDoubleJump;
-    private static int jumpCount = 0;
+    private bool moveLeft, moveRight, jump, isGrounded, isLeftWalled, isRightWalled, canDoubleJump;
+    private int extraJumpCount = 0;
     [SerializeField]
     private Transform groundCheck;
+    [SerializeField]
+    private Transform leftWallCheck;
+    [SerializeField]
+    private Transform rightWallCheck;
     [SerializeField]
     private float moveSpeed = 10f;
     [SerializeField]
@@ -18,7 +22,7 @@ public class PlayerController2D : MonoBehaviour
     {
         animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
-        spriteRenderer = GetComponent<SpriteRenderer>();    
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     public void MoveLeft()
@@ -26,7 +30,7 @@ public class PlayerController2D : MonoBehaviour
         moveLeft = true;
     }
 
-    public void MoveRight() 
+    public void MoveRight()
     {
         moveRight = true;
     }
@@ -34,65 +38,64 @@ public class PlayerController2D : MonoBehaviour
     {
         jump = true;
     }
-    public void DoubleJump()
-    {
-        if (!isGrounded && jumpCount == 1)
-        {
-            canDoubleJump = true;
-            jumpCount = 0;
-        }
-    }
-    public void StopMoving() 
+    public void StopMoving()
     {
         moveLeft = false;
         moveRight = false;
         jump = false;
     }
     private void FixedUpdate()
+    {
+        isGrounded = Physics2D.Linecast(transform.position, groundCheck.position, 1 << LayerMask.NameToLayer("Ground"));
+        isLeftWalled = Physics2D.Linecast(transform.position, leftWallCheck.position, 1 << LayerMask.NameToLayer("Ground"));
+        isRightWalled = Physics2D.Linecast(transform.position, rightWallCheck.position, 1 << LayerMask.NameToLayer("Ground"));
+        if (isGrounded)
         {
-            isGrounded = Physics2D.Linecast(transform.position, groundCheck.position, 1 << LayerMask.NameToLayer("Ground"));
-            if (rb.velocity == Vector2.zero && isGrounded) {
+            extraJumpCount = 0;
+            if (rb.velocity == Vector2.zero || isLeftWalled || isRightWalled)
                 animator.Play("PlayerIdleAnimation");
-            }
             if (moveLeft)
             {
                 rb.velocity = new Vector2(-moveSpeed, rb.velocity.y);
-                if (isGrounded)
-                    animator.Play("PlayerRunAnimation");
+                animator.Play("PlayerRunAnimation");
                 spriteRenderer.flipX = true;
             }
             else if (moveRight)
             {
                 rb.velocity = new Vector2(moveSpeed, rb.velocity.y);
-                if (isGrounded)
-                    animator.Play("PlayerRunAnimation");
+                animator.Play("PlayerRunAnimation");
                 spriteRenderer.flipX = false;
             }
             else
             {
-                if (isGrounded)
-                    animator.Play("PlayerIdleAnimation");
+                animator.Play("PlayerIdleAnimation");
                 rb.velocity = new Vector2(0, rb.velocity.y);
             }
             if (jump)
             {
-                if (isGrounded)
-                {
-                    rb.AddForce(Vector2.up * jumpSpeed);
-                    animator.Play("PlayerJumpUpAnimation");
-                    isGrounded = false;
-                    jump = false;
-                    jumpCount = 1;
-                    return;
-                }
-                if (canDoubleJump)
-                {
-                    rb.AddForce(Vector2.up * jumpSpeed);
-                    animator.Play("PlayerJumpUpAnimation");
-                    isGrounded = false;
-                    jump = false;
-                    canDoubleJump = false;
-                }
+                rb.AddForce(Vector2.up * jumpSpeed);
+                animator.Play("PlayerJumpUpAnimation");
+                isGrounded = false;
+                jump = false;
             }
         }
+        // Not Grounded
+        if (moveLeft && !isLeftWalled)
+        {
+            rb.velocity = new Vector2(-moveSpeed, rb.velocity.y);
+            spriteRenderer.flipX = true;
+        }
+        if (moveRight && !isRightWalled)
+        {
+            rb.velocity = new Vector2(moveSpeed, rb.velocity.y);
+            spriteRenderer.flipX = false;
+        }
+        if (jump && extraJumpCount < 1)
+        {
+            rb.AddForce(Vector2.up * jumpSpeed);
+            animator.Play("PlayerJumpUpAnimation");
+            jump = false;
+            extraJumpCount++;
+        }
     }
+}
