@@ -5,7 +5,8 @@ public class PlayerController2D : MonoBehaviour
     Animator animator;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
-    private bool moveLeft, moveRight, jump, isGrounded;
+    private bool moveLeft, moveRight, jump, isGrounded, canDoubleJump;
+    private static int jumpCount = 0;
     [SerializeField]
     private Transform groundCheck;
     [SerializeField]
@@ -13,7 +14,6 @@ public class PlayerController2D : MonoBehaviour
     [SerializeField]
     private float jumpSpeed = 500f;
 
-    // Start is called before the first frame update
     void Start()
     {
         animator = GetComponent<Animator>();
@@ -34,7 +34,14 @@ public class PlayerController2D : MonoBehaviour
     {
         jump = true;
     }
-
+    public void DoubleJump()
+    {
+        if (!isGrounded && jumpCount == 1)
+        {
+            canDoubleJump = true;
+            jumpCount = 0;
+        }
+    }
     public void StopMoving() 
     {
         moveLeft = false;
@@ -42,37 +49,50 @@ public class PlayerController2D : MonoBehaviour
         jump = false;
     }
     private void FixedUpdate()
-    {
-        isGrounded = Physics2D.Linecast(transform.position, groundCheck.position, 1 << LayerMask.NameToLayer("Ground"));
-        if (rb.velocity == Vector2.zero && isGrounded) {
-            animator.Play("PlayerIdleAnimation");
-        }
-        if (moveLeft) 
         {
-            rb.velocity = new Vector2(-moveSpeed, rb.velocity.y);
-            if (isGrounded)
-                animator.Play("PlayerRunAnimation");
-             spriteRenderer.flipX = true;
-        }
-        else if (moveRight)
-        {
-            rb.velocity = new Vector2(moveSpeed, rb.velocity.y);
-            if (isGrounded)
-                animator.Play("PlayerRunAnimation");
-            spriteRenderer.flipX = false;
-        }
-        else
-        {
-            if (isGrounded)
+            isGrounded = Physics2D.Linecast(transform.position, groundCheck.position, 1 << LayerMask.NameToLayer("Ground"));
+            if (rb.velocity == Vector2.zero && isGrounded) {
                 animator.Play("PlayerIdleAnimation");
-            rb.velocity = new Vector2(0, rb.velocity.y);
-        }
-        if (jump && isGrounded)
-        {
-            rb.AddForce(Vector2.up * jumpSpeed);
-            animator.Play("PlayerJumpUpAnimation");
-            jump = false;
-            isGrounded = false;
+            }
+            if (moveLeft)
+            {
+                rb.velocity = new Vector2(-moveSpeed, rb.velocity.y);
+                if (isGrounded)
+                    animator.Play("PlayerRunAnimation");
+                spriteRenderer.flipX = true;
+            }
+            else if (moveRight)
+            {
+                rb.velocity = new Vector2(moveSpeed, rb.velocity.y);
+                if (isGrounded)
+                    animator.Play("PlayerRunAnimation");
+                spriteRenderer.flipX = false;
+            }
+            else
+            {
+                if (isGrounded)
+                    animator.Play("PlayerIdleAnimation");
+                rb.velocity = new Vector2(0, rb.velocity.y);
+            }
+            if (jump)
+            {
+                if (isGrounded)
+                {
+                    rb.AddForce(Vector2.up * jumpSpeed);
+                    animator.Play("PlayerJumpUpAnimation");
+                    isGrounded = false;
+                    jump = false;
+                    jumpCount = 1;
+                    return;
+                }
+                if (canDoubleJump)
+                {
+                    rb.AddForce(Vector2.up * jumpSpeed);
+                    animator.Play("PlayerJumpUpAnimation");
+                    isGrounded = false;
+                    jump = false;
+                    canDoubleJump = false;
+                }
+            }
         }
     }
-}
