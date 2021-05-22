@@ -52,15 +52,15 @@ public class PlayerController2D : MonoBehaviour
         if (isGrounded)
         {
             extraJumpCount = 0;
-            if (rb.velocity == Vector2.zero || isLeftWalled || isRightWalled)
+            if (rb.velocity == Vector2.zero)
                 animator.Play("PlayerIdleAnimation");
-            if (moveLeft)
+            if (moveLeft && !isLeftWalled)
             {
                 rb.velocity = new Vector2(-moveSpeed, rb.velocity.y);
                 animator.Play("PlayerRunAnimation");
                 spriteRenderer.flipX = true;
             }
-            else if (moveRight)
+            else if (moveRight && !isRightWalled)
             {
                 rb.velocity = new Vector2(moveSpeed, rb.velocity.y);
                 animator.Play("PlayerRunAnimation");
