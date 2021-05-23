@@ -5,7 +5,7 @@ public class PlayerController2D : MonoBehaviour
     Animator animator;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
-    private bool moveLeft, moveRight, jump, isGrounded, isLeftWalled, isRightWalled, canDoubleJump;
+    private bool moveLeft, moveRight, jump, isGrounded, isLeftWalled, isRightWalled;
     private int extraJumpCount = 0;
     [SerializeField]
     private Transform groundCheck;
@@ -14,9 +14,12 @@ public class PlayerController2D : MonoBehaviour
     [SerializeField]
     private Transform rightWallCheck;
     [SerializeField]
-    private float moveSpeed = 10f;
+    private float moveSpeed = 500f;
     [SerializeField]
     private float jumpSpeed = 500f;
+    [SerializeField]
+    private float maxSpeed = 500f;
+
 
     void Start()
     {
@@ -44,6 +47,28 @@ public class PlayerController2D : MonoBehaviour
         moveRight = false;
         jump = false;
     }
+
+    private void Animate()
+    {
+        if (rb.velocity == Vector2.zero || !moveLeft && !moveRight)
+            animator.Play("PlayerIdleAnimation");
+        if (moveLeft && !isLeftWalled)
+        {
+            animator.Play("PlayerRunAnimation");
+            spriteRenderer.flipX = true;
+        }
+        else if (moveRight && !isRightWalled)
+        {
+            animator.Play("PlayerRunAnimation");
+            spriteRenderer.flipX = false;
+        }
+        if (jump)
+        {
+            animator.Play("PlayerJumpUpAnimation");
+            jump = false;
+        }
+    
+    }
     private void FixedUpdate()
     {
         isGrounded = Physics2D.Linecast(transform.position, groundCheck.position, 1 << LayerMask.NameToLayer("Ground"));
@@ -52,50 +77,54 @@ public class PlayerController2D : MonoBehaviour
         if (isGrounded)
         {
             extraJumpCount = 0;
-            if (rb.velocity == Vector2.zero)
-                animator.Play("PlayerIdleAnimation");
             if (moveLeft && !isLeftWalled)
             {
-                rb.velocity = new Vector2(-moveSpeed, rb.velocity.y);
-                animator.Play("PlayerRunAnimation");
-                spriteRenderer.flipX = true;
+                if (rb.velocity.x > 0)
+                    rb.velocity = new Vector2(0, rb.velocity.y);
+                if (rb.velocity.x > -maxSpeed)
+                    rb.AddForce(Vector2.left * moveSpeed * Time.deltaTime);
             }
             else if (moveRight && !isRightWalled)
             {
-                rb.velocity = new Vector2(moveSpeed, rb.velocity.y);
-                animator.Play("PlayerRunAnimation");
-                spriteRenderer.flipX = false;
+                if (rb.velocity.x < 0)
+                    rb.velocity = new Vector2(0, rb.velocity.y);
+                if (rb.velocity.x < maxSpeed)
+                    rb.AddForce(Vector2.right * moveSpeed * Time.deltaTime);
             }
             else
-            {
-                animator.Play("PlayerIdleAnimation");
                 rb.velocity = new Vector2(0, rb.velocity.y);
-            }
             if (jump)
-            {
-                rb.AddForce(Vector2.up * jumpSpeed);
-                animator.Play("PlayerJumpUpAnimation");
-                isGrounded = false;
-                jump = false;
-            }
+                rb.velocity = new Vector2(rb.velocity.x, jumpSpeed);
+            
+            Animate();
         }
         // Not Grounded
-        if (moveLeft && !isLeftWalled)
+        else if (moveLeft && !isLeftWalled)
         {
-            rb.velocity = new Vector2(-moveSpeed, rb.velocity.y);
+            if (rb.velocity.x > 0)
+                rb.velocity = new Vector2(0, rb.velocity.y);
+            if (rb.velocity.x > -maxSpeed)
+                rb.AddForce(Vector2.left * moveSpeed * Time.deltaTime);
             spriteRenderer.flipX = true;
         }
-        if (moveRight && !isRightWalled)
+        else if (moveRight && !isRightWalled)
         {
-            rb.velocity = new Vector2(moveSpeed, rb.velocity.y);
+            if (rb.velocity.x < 0)
+                rb.velocity = new Vector2(0, rb.velocity.y);
+            if (rb.velocity.x < maxSpeed)
+                rb.AddForce(Vector2.right * moveSpeed * Time.deltaTime);
             spriteRenderer.flipX = false;
         }
+        // Can double jump
         if (jump && extraJumpCount < 1)
         {
-            rb.AddForce(Vector2.up * jumpSpeed);
+            rb.velocity = new Vector2(rb.velocity.x, 0.75f * jumpSpeed);
             animator.Play("PlayerJumpUpAnimation");
             jump = false;
             extraJumpCount++;
         }
+        // Cannot jump more than once extra
+        if (jump && extraJumpCount >= 1)
+            jump = false;       
     }
 }
