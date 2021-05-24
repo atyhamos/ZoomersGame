@@ -54,8 +54,11 @@ public class PlayerController2D : MonoBehaviour
     }
     public void Crouch()
     {
-        crouch = true;
-        slideCount = 0;
+        if (moveLeft || moveRight)
+        {
+            crouch = true;
+            slideCount = 0;
+        }
     }
 
     private void Animate()
