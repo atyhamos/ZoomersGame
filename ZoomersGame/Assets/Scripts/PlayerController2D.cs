@@ -65,13 +65,15 @@ public class PlayerController2D : MonoBehaviour
             animator.SetBool("IsJumping", true);
         if (rb.velocity.y < -0.01)
             animator.SetBool("IsFalling", true);
-        else
+        else if (rb.velocity.y >= 0)
             animator.SetBool("IsFalling", false);
     }
 
     public void OnLanding()
     {
-        animator.SetBool("IsJumping", false);
+        Debug.Log("hello");
+        if (rb.velocity.y <= 0)
+            animator.SetBool("IsJumping", false);
         animator.Play("PlayerIdleAnimation");
     }
 
@@ -85,5 +87,6 @@ public class PlayerController2D : MonoBehaviour
         controller.Move(horizontalMove * Time.fixedDeltaTime, crouch, jump);
         jump = false;
         crouch = false;
+       
     }
 }
