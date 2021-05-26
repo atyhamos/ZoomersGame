@@ -55,8 +55,6 @@ public class CharacterController2D : MonoBehaviour
 					OnLandEvent.Invoke();
 			}
 		}
-		if (isGrounded)
-			Debug.Log("ground");
 	}
 
 
@@ -86,6 +84,9 @@ public class CharacterController2D : MonoBehaviour
 		// If pressing crouch
 		if (crouch)
 		{
+			// Disable one of the colliders when sliding
+			if (isGrounded && crouchDisableCollider != null)
+				crouchDisableCollider.enabled = false;
 			slideTimer = 0;
 			if (!isSliding)
 			{
@@ -108,10 +109,6 @@ public class CharacterController2D : MonoBehaviour
 				}
 				// Reduce the speed by the slideSpeed multiplier
 				move *= slideSpeed;
-
-				// Disable one of the colliders when sliding
-				if (crouchDisableCollider != null)
-					crouchDisableCollider.enabled = false;
             }
 		}
 		
@@ -143,14 +140,12 @@ public class CharacterController2D : MonoBehaviour
 			rb.velocity = new Vector2(rb.velocity.x, 0.8f * jumpForce);
 			canDoubleJump = true;
 		}
-		else if (jump && !isGrounded && canDoubleJump)
+		else if (jump && canDoubleJump)
 		{
 			rb.velocity = new Vector2(rb.velocity.x, 0.8f * jumpForce);
 			canDoubleJump = false;
 		}
 	}
-
-
 
 	private void Flip()
 	{

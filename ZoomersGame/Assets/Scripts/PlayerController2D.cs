@@ -71,7 +71,6 @@ public class PlayerController2D : MonoBehaviour
 
     public void OnLanding()
     {
-        Debug.Log("hello");
         if (rb.velocity.y <= 0)
             animator.SetBool("IsJumping", false);
         animator.Play("PlayerIdleAnimation");
