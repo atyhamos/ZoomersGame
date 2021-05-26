@@ -1,98 +1,92 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerController2D : MonoBehaviour
 {
-    Animator animator;
+    [SerializeField] Animator animator;
+    [SerializeField] CharacterController2D controller;
     Rigidbody2D rb;
-    SpriteRenderer spriteRenderer;
-    private bool moveLeft, moveRight, jump, isGrounded, canDoubleJump;
-    private static int jumpCount = 0;
-    [SerializeField]
-    private Transform groundCheck;
-    [SerializeField]
-    private float moveSpeed = 10f;
-    [SerializeField]
-    private float jumpSpeed = 500f;
+    private bool moveLeft, moveRight, jump, crouch;
+    private int horizontalMove;
 
     void Start()
     {
-        animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
-        spriteRenderer = GetComponent<SpriteRenderer>();    
+        moveLeft = false;
+        moveRight = false;
+        crouch = false;
     }
 
     public void MoveLeft()
     {
-        moveLeft = true;
+        moveLeft = !moveLeft;
     }
 
-    public void MoveRight() 
+    public void MoveRight()
     {
-        moveRight = true;
+        moveRight = !moveRight;
     }
     public void Jump()
     {
         jump = true;
     }
-    public void DoubleJump()
+    public void Crouch()
     {
-        if (!isGrounded && jumpCount == 1)
+        if (moveLeft || moveRight)
         {
-            canDoubleJump = true;
-            jumpCount = 0;
+            crouch = true;
         }
     }
-    public void StopMoving() 
+
+    private void Update()
     {
-        moveLeft = false;
-        moveRight = false;
-        jump = false;
+        moveLeft = moveLeft || Input.GetButtonDown("Left");
+        if (moveLeft)
+            horizontalMove = -1;
+        if (Input.GetButtonUp("Left"))
+            moveLeft = false;
+
+        moveRight = moveRight || Input.GetButtonDown("Right");
+        if (moveRight)
+            horizontalMove = 1;
+        if (Input.GetButtonUp("Right"))
+            moveRight = false;
+        
+        if (!moveLeft && !moveRight)
+            horizontalMove = 0;
+        
+        crouch = crouch || Input.GetButtonDown("Crouch") || Input.GetButtonUp("Crouch");
+        
+        animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
+        
+        jump = jump || Input.GetButtonDown("Jump");
+        if (jump)
+            animator.SetBool("IsJumping", true);
+        if (rb.velocity.y < -0.01)
+            animator.SetBool("IsFalling", true);
+        else if (rb.velocity.y >= 0)
+            animator.SetBool("IsFalling", false);
     }
+
+    public void OnLanding()
+    {
+        Debug.Log("hello");
+        if (rb.velocity.y <= 0)
+            animator.SetBool("IsJumping", false);
+        animator.Play("PlayerIdleAnimation");
+    }
+
+    public void OnSlide(bool isSliding)
+    {
+        animator.SetBool("IsSliding", isSliding);
+    }
+
     private void FixedUpdate()
-        {
-            isGrounded = Physics2D.Linecast(transform.position, groundCheck.position, 1 << LayerMask.NameToLayer("Ground"));
-            if (rb.velocity == Vector2.zero && isGrounded) {
-                animator.Play("PlayerIdleAnimation");
-            }
-            if (moveLeft)
-            {
-                rb.velocity = new Vector2(-moveSpeed, rb.velocity.y);
-                if (isGrounded)
-                    animator.Play("PlayerRunAnimation");
-                spriteRenderer.flipX = true;
-            }
-            else if (moveRight)
-            {
-                rb.velocity = new Vector2(moveSpeed, rb.velocity.y);
-                if (isGrounded)
-                    animator.Play("PlayerRunAnimation");
-                spriteRenderer.flipX = false;
-            }
-            else
-            {
-                if (isGrounded)
-                    animator.Play("PlayerIdleAnimation");
-                rb.velocity = new Vector2(0, rb.velocity.y);
-            }
-            if (jump)
-            {
-                if (isGrounded)
-                {
-                    rb.AddForce(Vector2.up * jumpSpeed);
-                    animator.Play("PlayerJumpUpAnimation");
-                    isGrounded = false;
-                    jump = false;
-                    jumpCount = 1;
-                    return;
-                }
-                if (canDoubleJump)
-                {
-                    rb.AddForce(Vector2.up * jumpSpeed);
-                    animator.Play("PlayerJumpUpAnimation");
-                    isGrounded = false;
-                    jump = false;
-                    canDoubleJump = false;
-                }
-            }
-        }
+    {
+        controller.Move(horizontalMove * Time.fixedDeltaTime, crouch, jump);
+        jump = false;
+        crouch = false;
+       
     }
+}
