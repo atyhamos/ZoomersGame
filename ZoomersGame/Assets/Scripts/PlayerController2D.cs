@@ -71,7 +71,7 @@ public class PlayerController2D : MonoBehaviour
 
     public void OnLanding()
     {
-        if (jump)
+        if (rb.velocity.y > 0)
             animator.SetBool("IsJumping", true);
         else
         {

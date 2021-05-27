@@ -67,7 +67,7 @@ public class CharacterController2D : MonoBehaviour
 				crouch = true;
 			else if (isSliding)
 			{
-				if (slideTimer < 0.8f)
+				if (slideTimer < 0.5f)
 					slideTimer += Time.deltaTime;
 				else
 				{
