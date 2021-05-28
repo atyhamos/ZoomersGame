@@ -13,7 +13,7 @@ public class PlayfabManager : MonoBehaviour
     public static string playerName;
     public InputField emailInput;
     public InputField passwordInput;
-
+    public InputField nicknameInput;
     public void RegisterButton()
     {
         if (passwordInput.text.Length < 6)
@@ -27,15 +27,44 @@ public class PlayfabManager : MonoBehaviour
             Password = passwordInput.text,
             RequireBothUsernameAndEmail = false
         };
-        playerName = emailInput.text;
         PlayFabClientAPI.RegisterPlayFabUser(request, OnRegisterSuccess, OnError);
 
     }
 
+    void Hide()
+    {
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            if (i < 4)
+                transform.GetChild(i).gameObject.SetActive(true);
+            else
+                transform.GetChild(i).gameObject.SetActive(false);
+        }
+    }
+
+    public void SubmitButton()
+    {
+        var request = new UpdateUserTitleDisplayNameRequest
+        {
+            DisplayName = nicknameInput.text
+        };
+        playerName = nicknameInput.text;
+        PlayFabClientAPI.UpdateUserTitleDisplayName(request, OnSubmitSuccess, OnError);
+    }
+
+    void OnSubmitSuccess(UpdateUserTitleDisplayNameResult result)
+    {
+        SceneManager.LoadScene("MainMenu");
+        Screen.autorotateToPortrait = false;
+        Screen.autorotateToLandscapeLeft = true;
+        Screen.orientation = ScreenOrientation.LandscapeLeft;
+    }
+
     void OnRegisterSuccess(RegisterPlayFabUserResult result)
     {
-        messageText.text = "Registered and logged in";
-        SceneManager.LoadScene("Tutorial");
+        Hide();
+        if (messageText.text == "User not found")
+            messageText.text = "";
     }
 
     public void LoginButton()
@@ -45,7 +74,6 @@ public class PlayfabManager : MonoBehaviour
             Email = emailInput.text,
             Password = passwordInput.text
         };
-        playerName = emailInput.text;
         PlayFabClientAPI.LoginWithEmailAddress(request, OnLoginSuccess, OnError);
     }
 
@@ -53,7 +81,10 @@ public class PlayfabManager : MonoBehaviour
     {
         messageText.text = "Logged in!";
         Debug.Log("Successful login/account create!");
-        SceneManager.LoadScene("Tutorial");
+        SceneManager.LoadScene("MainMenu");
+        Screen.autorotateToPortrait = false;
+        Screen.autorotateToLandscapeLeft = true;
+        Screen.orientation = ScreenOrientation.LandscapeLeft;
     }
 
     public void ResetPasswordButton()
