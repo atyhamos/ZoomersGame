@@ -12,13 +12,12 @@ public class CharacterController2D : MonoBehaviour
 	[SerializeField] private Collider2D crouchDisableCollider;              // A collider that will be disabled when crouching
 	[SerializeField] private LayerMask m_WhatIsGround;
 	const float groundedRadius = .2f; // Radius of the overlap circle to determine if grounded
-	private bool isGrounded;            // Whether or not the player is grounded.
+	public bool isGrounded;            // Whether or not the player is grounded.
 	private bool canDoubleJump;
-	const float ceilingRadius = .2f; // Radius of the overlap circle to determine if the player can stand up
+	const float ceilingRadius = .0625f; // Radius of the overlap circle to determine if the player can stand up
 	private Rigidbody2D rb;
 	private bool m_FacingRight = true;  // For determining which way the player is currently facing.
 	private float slideTimer = 0f;
-
 	public UnityEvent OnLandEvent;
 
 	[System.Serializable]
@@ -30,7 +29,6 @@ public class CharacterController2D : MonoBehaviour
 	private void Awake()
 	{
 		rb = GetComponent<Rigidbody2D>();
-
 		if (OnLandEvent == null)
 			OnLandEvent = new UnityEvent();
 
@@ -69,7 +67,7 @@ public class CharacterController2D : MonoBehaviour
 				crouch = true;
 			else if (isSliding)
 			{
-				if (slideTimer < 0.8f)
+				if (slideTimer < 0.5f)
 					slideTimer += Time.deltaTime;
 				else
 				{
@@ -156,5 +154,9 @@ public class CharacterController2D : MonoBehaviour
 		Vector3 theScale = transform.localScale;
 		theScale.x *= -1;
 		transform.localScale = theScale;
+
+		Vector3 nameScale = transform.GetChild(2).transform.GetChild(0).localScale;
+		nameScale.x *= -1;
+		transform.GetChild(2).transform.GetChild(0).localScale = nameScale;
 	}
 }
