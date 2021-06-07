@@ -14,6 +14,7 @@ public class PlayfabManager : MonoBehaviour
     public InputField emailInput;
     public InputField passwordInput;
     public InputField nicknameInput;
+
     public void RegisterButton()
     {
         if (passwordInput.text.Length < 6)
@@ -72,7 +73,11 @@ public class PlayfabManager : MonoBehaviour
         var request = new LoginWithEmailAddressRequest
         {
             Email = emailInput.text,
-            Password = passwordInput.text
+            Password = passwordInput.text,
+            InfoRequestParameters = new GetPlayerCombinedInfoRequestParams
+            {
+                GetPlayerProfile = true
+            }
         };
         PlayFabClientAPI.LoginWithEmailAddress(request, OnLoginSuccess, OnError);
     }
@@ -81,6 +86,8 @@ public class PlayfabManager : MonoBehaviour
     {
         messageText.text = "Logged in!";
         Debug.Log("Successful login/account create!");
+        if (result.InfoResultPayload.PlayerProfile != null)
+            playerName = result.InfoResultPayload.PlayerProfile.DisplayName;
         SceneManager.LoadScene("MainMenu");
         Screen.autorotateToPortrait = false;
         Screen.autorotateToLandscapeLeft = true;

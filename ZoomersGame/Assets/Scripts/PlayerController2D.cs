@@ -61,23 +61,26 @@ public class PlayerController2D : MonoBehaviour
         animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
         
         jump = jump || Input.GetButtonDown("Jump");
-        if (jump)
-            animator.SetBool("IsJumping", true);
-        if (rb.velocity.y < -0.01)
-            animator.SetBool("IsFalling", true);
-        else if (rb.velocity.y >= 0)
+        if (controller.isGrounded)
+        {
+            animator.SetBool("IsJumping", false);
             animator.SetBool("IsFalling", false);
+        }
+        else if (rb.velocity.y < -0.01)
+        {
+            animator.SetBool("IsJumping", false);
+            animator.SetBool("IsFalling", true);
+        }
+        if (jump)
+        {
+            animator.SetBool("IsJumping", true);
+            animator.SetBool("IsFalling", false);
+        }
     }
 
     public void OnLanding()
     {
-        if (rb.velocity.y > 0)
-            animator.SetBool("IsJumping", true);
-        else
-        {
-            animator.SetBool("IsJumping", false);
-            animator.Play("PlayerIdleAnimation");
-        }
+        animator.SetBool("IsFalling", false);
     }
 
     public void OnSlide(bool isSliding)
