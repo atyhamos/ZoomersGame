@@ -15,6 +15,7 @@ public class PlayfabManager : MonoBehaviour
     public InputField passwordInput;
     public InputField nicknameInput;
 
+   
     public void RegisterButton()
     {
         if (passwordInput.text.Length < 6)
