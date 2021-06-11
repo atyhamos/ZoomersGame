@@ -6,9 +6,8 @@ using UnityEngine.UI;
 public class NameManager : MonoBehaviour
 {
     public Text userName;
-    // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
-        userName.text = LoginManager.playerName;
+        userName.text = FirebaseManager.instance.user.DisplayName;
     }
 }
