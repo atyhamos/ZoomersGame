@@ -1,17 +1,24 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using Photon.Pun;
 
 public class PlayerController2D : MonoBehaviour
 {
     [SerializeField] Animator animator;
     [SerializeField] CharacterController2D controller;
     Rigidbody2D rb;
+    public GameObject PlayerCamera;
+    public GameObject PlayerButtons;
+    public Text PlayerNameText;
+
     private bool moveLeft, moveRight, jump, crouch;
     private int horizontalMove;
 
     void Start()
     {
+        PlayerNameText.text = PhotonNetwork.NickName;
         rb = GetComponent<Rigidbody2D>();
         moveLeft = false;
         moveRight = false;
@@ -34,32 +41,32 @@ public class PlayerController2D : MonoBehaviour
     public void Crouch()
     {
         if (moveLeft || moveRight)
-        {
             crouch = true;
-        }
     }
 
     private void Update()
     {
         moveLeft = moveLeft || Input.GetButtonDown("Left");
         if (moveLeft)
-            horizontalMove = -1;
+            horizontalMove = -1;    
+        
         if (Input.GetButtonUp("Left"))
             moveLeft = false;
 
         moveRight = moveRight || Input.GetButtonDown("Right");
         if (moveRight)
             horizontalMove = 1;
+    
         if (Input.GetButtonUp("Right"))
             moveRight = false;
-        
+
         if (!moveLeft && !moveRight)
             horizontalMove = 0;
-        
+
         crouch = crouch || Input.GetButtonDown("Crouch") || Input.GetButtonUp("Crouch");
-        
+
         animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
-        
+
         jump = jump || Input.GetButtonDown("Jump");
         if (controller.isGrounded)
         {
@@ -93,6 +100,5 @@ public class PlayerController2D : MonoBehaviour
         controller.Move(horizontalMove * Time.fixedDeltaTime, crouch, jump);
         jump = false;
         crouch = false;
-       
     }
 }

@@ -96,7 +96,7 @@ public class FirebaseManager : MonoBehaviour
         if (user != null)
         {
             if (user.IsEmailVerified)
-            // Move to Main page
+            // Move to Loading page
             {
                 GameManager.instance.ChangeScene(1);
             }
@@ -191,7 +191,7 @@ public class FirebaseManager : MonoBehaviour
         {
             if (user.IsEmailVerified)
             {
-                yield return new WaitForSeconds(1f);
+                // yield return new WaitForSeconds(1f);
                 Screen.autorotateToPortrait = false;
                 Screen.autorotateToLandscapeLeft = true;
                 Screen.orientation = ScreenOrientation.LandscapeLeft;
