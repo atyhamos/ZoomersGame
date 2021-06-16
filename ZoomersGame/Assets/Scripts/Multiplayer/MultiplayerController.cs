@@ -13,7 +13,7 @@ public class MultiplayerController : MonoBehaviour
     public GameObject PlayerCamera;
     public GameObject PlayerButtons;
     public Text PlayerNameText;
-    public SpriteRenderer sr;
+    public SpriteRenderer Sprite;
 
     private bool moveLeft, moveRight, jump, crouch;
     private int horizontalMove;
@@ -26,7 +26,7 @@ public class MultiplayerController : MonoBehaviour
             PlayerButtons.SetActive(true);
             PlayerCamera.SetActive(true);
             PlayerNameText.text = PhotonNetwork.NickName;
-            PlayerNameText.color = Color.white;
+            PlayerNameText.color = Color.cyan;
         }
         else
         {
@@ -63,43 +63,49 @@ public class MultiplayerController : MonoBehaviour
     {
         if (view.IsMine)
             if (moveLeft || moveRight)
-            {
                 crouch = true;
-            }
     }
 
     [PunRPC]
     private void FlipTrue()
     {
-        sr.flipX = true;
+        Sprite.flipX = true;
     }
 
     [PunRPC]
     private void FlipFalse()
     {
-        sr.flipX = false;
+        Sprite.flipX = false;
     }
-
 
     private void Update()
     {
         if (view.IsMine)
         {
+        //    // debugging weird jumping animation while grounded
+        //    if (controller.isGrounded)
+        //    {
+        //        animator.SetBool("IsJumping", false);
+        //        animator.SetBool("IsFalling", false);
+        //    }
+            
             moveLeft = moveLeft || Input.GetButtonDown("Left");
             if (moveLeft)
             {
-                horizontalMove = -1;
                 view.RPC("FlipTrue", RpcTarget.AllBuffered);
+                horizontalMove = -1;
             }
+
             if (Input.GetButtonUp("Left"))
                 moveLeft = false;
 
             moveRight = moveRight || Input.GetButtonDown("Right");
             if (moveRight)
             {
-                horizontalMove = 1;
                 view.RPC("FlipFalse", RpcTarget.AllBuffered);
+                horizontalMove = 1;
             }
+
             if (Input.GetButtonUp("Right"))
                 moveRight = false;
 
@@ -111,21 +117,24 @@ public class MultiplayerController : MonoBehaviour
             animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
 
             jump = jump || Input.GetButtonDown("Jump");
-            if (controller.isGrounded)
-            {
-                animator.SetBool("IsJumping", false);
-                animator.SetBool("IsFalling", false);
-            }
-            else if (rb.velocity.y < -0.01)
+
+            // cannot jump while sliding
+        //    if (jump && !controller.isSliding)
+        //    {
+        //        animator.SetBool("IsJumping", true);
+        //        animator.SetBool("IsFalling", false);
+        //    }
+            if (!controller.isGrounded && rb.velocity.y < -0.01)
             {
                 animator.SetBool("IsJumping", false);
                 animator.SetBool("IsFalling", true);
             }
-            if (jump)
-            {
-                animator.SetBool("IsJumping", true);
-                animator.SetBool("IsFalling", false);
-            }
+        }
+        if (view.IsMine)
+        {
+            controller.Move(horizontalMove, crouch, jump);
+            jump = false;
+            crouch = false;
         }
     }
 
@@ -139,13 +148,13 @@ public class MultiplayerController : MonoBehaviour
         animator.SetBool("IsSliding", isSliding);
     }
 
-    private void FixedUpdate()
-    {
-        if (view.IsMine)
-        {
-            controller.Move(horizontalMove * Time.fixedDeltaTime, crouch, jump);
-            jump = false;
-            crouch = false;
-        }
-    }
+    //private void FixedUpdate()
+    //{
+    //    if (view.IsMine)
+    //    {
+    //        controller.Move(horizontalMove, crouch, jump);
+    //        jump = false;
+    //        crouch = false;
+    //    }
+    //}
 }

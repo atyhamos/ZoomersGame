@@ -68,17 +68,20 @@ public class PlayerController2D : MonoBehaviour
         animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
 
         jump = jump || Input.GetButtonDown("Jump");
+
+        // debugging weird jumping animation while grounded
         if (controller.isGrounded)
         {
             animator.SetBool("IsJumping", false);
             animator.SetBool("IsFalling", false);
         }
-        else if (rb.velocity.y < -0.01)
+        else if (!controller.isGrounded && rb.velocity.y < -0.01)
         {
             animator.SetBool("IsJumping", false);
             animator.SetBool("IsFalling", true);
         }
-        if (jump)
+        // cannot jump while sliding
+        if (jump && !controller.isSliding)
         {
             animator.SetBool("IsJumping", true);
             animator.SetBool("IsFalling", false);
@@ -97,7 +100,7 @@ public class PlayerController2D : MonoBehaviour
 
     private void FixedUpdate()
     {
-        controller.Move(horizontalMove * Time.fixedDeltaTime, crouch, jump);
+        controller.Move(horizontalMove, crouch, jump);
         jump = false;
         crouch = false;
     }
