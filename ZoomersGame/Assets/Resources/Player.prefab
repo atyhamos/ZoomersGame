@@ -116,7 +116,6 @@ GameObject:
   - component: {fileID: 8257042215039388688}
   - component: {fileID: 8257042215039388695}
   - component: {fileID: 8257042215039388694}
-  - component: {fileID: 8257042215039388693}
   m_Layer: 7
   m_Name: Menu
   m_TagString: Untagged
@@ -226,8 +225,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8257042215039388693}
-        m_TargetAssemblyTypeName: MenuControl, Assembly-CSharp
+      - m_Target: {fileID: 6114903624226235018}
+        m_TargetAssemblyTypeName: MultiplayerController, Assembly-CSharp
         m_MethodName: Home
         m_Mode: 1
         m_Arguments:
@@ -238,19 +237,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
---- !u!114 &8257042215039388693
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8257042215039388699}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5f6dbebd50addf458dc3e25ae92752d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  welcomeMessage: {fileID: 0}
 --- !u!1 &8257042215144625769
 GameObject:
   m_ObjectHideFlags: 0
@@ -497,6 +483,7 @@ GameObject:
   - component: {fileID: 8257042215642085596}
   - component: {fileID: 8257042215642085571}
   - component: {fileID: 8257042215642085570}
+  - component: {fileID: 4906739778896877379}
   m_Layer: 7
   m_Name: Player
   m_TagString: Untagged
@@ -738,10 +725,11 @@ MonoBehaviour:
   prefixField: -1
   Synchronization: 3
   OwnershipTransfer: 0
-  observableSearch: 2
+  observableSearch: 0
   ObservedComponents:
-  - {fileID: 8257042215642085571}
+  - {fileID: 4906739778896877379}
   - {fileID: 8257042215642085570}
+  - {fileID: 0}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
@@ -752,7 +740,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8257042215642085577}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8efc6b1d64977384eb3405357896c656, type: 3}
   m_Name: 
@@ -760,13 +748,13 @@ MonoBehaviour:
   m_PositionModel:
     SynchronizeEnabled: 1
     TeleportEnabled: 1
-    TeleportIfDistanceGreaterThan: 0.01
+    TeleportIfDistanceGreaterThan: 5
     InterpolateOption: 4
     InterpolateMoveTowardsSpeed: 15
-    InterpolateLerpSpeed: 5
+    InterpolateLerpSpeed: 100
     ExtrapolateOption: 0
-    ExtrapolateSpeed: 1
-    ExtrapolateIncludingRoundTripTime: 1
+    ExtrapolateSpeed: 2.02
+    ExtrapolateIncludingRoundTripTime: 0
     ExtrapolateNumberOfStoredPositions: 1
   m_RotationModel:
     SynchronizeEnabled: 0
@@ -775,8 +763,8 @@ MonoBehaviour:
     InterpolateLerpSpeed: 5
   m_ScaleModel:
     SynchronizeEnabled: 0
-    InterpolateOption: 0
-    InterpolateMoveTowardsSpeed: 1
+    InterpolateOption: 1
+    InterpolateMoveTowardsSpeed: 10.01
     InterpolateLerpSpeed: 0
 --- !u!114 &8257042215642085570
 MonoBehaviour:
@@ -808,6 +796,19 @@ MonoBehaviour:
   m_SynchronizeLayers:
   - SynchronizeType: 0
     LayerIndex: 0
+--- !u!114 &4906739778896877379
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8257042215642085577}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35144820bcc25444bb8f0fd767d9423e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SmoothingDelay: 40
 --- !u!1 &8257042215644263350
 GameObject:
   m_ObjectHideFlags: 0

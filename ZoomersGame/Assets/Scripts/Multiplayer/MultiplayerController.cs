@@ -8,8 +8,8 @@ public class MultiplayerController : MonoBehaviour
 {
     [SerializeField] Animator animator;
     [SerializeField] MultiCharacterController controller;
-    Rigidbody2D rb;
-    PhotonView view;
+    private Rigidbody2D rb;
+    private PhotonView view;
     public GameObject PlayerCamera;
     public GameObject PlayerButtons;
     public Text PlayerNameText;
@@ -64,6 +64,12 @@ public class MultiplayerController : MonoBehaviour
         if (view.IsMine)
             if (moveLeft || moveRight)
                 crouch = true;
+    }
+    public void Home()
+    {
+        GameManager.instance.ChangeScene(2);
+        PhotonNetwork.Destroy(view);
+        PhotonNetwork.LeaveRoom();
     }
 
     [PunRPC]
@@ -130,12 +136,6 @@ public class MultiplayerController : MonoBehaviour
                 animator.SetBool("IsFalling", true);
             }
         }
-        if (view.IsMine)
-        {
-            controller.Move(horizontalMove, crouch, jump);
-            jump = false;
-            crouch = false;
-        }
     }
 
     public void OnLanding()
@@ -148,13 +148,13 @@ public class MultiplayerController : MonoBehaviour
         animator.SetBool("IsSliding", isSliding);
     }
 
-    //private void FixedUpdate()
-    //{
-    //    if (view.IsMine)
-    //    {
-    //        controller.Move(horizontalMove, crouch, jump);
-    //        jump = false;
-    //        crouch = false;
-    //    }
-    //}
+    private void FixedUpdate()
+    {
+        if (view.IsMine)
+        {
+            controller.Move(horizontalMove, crouch, jump);
+            jump = false;
+            crouch = false;
+        }
+    }
 }

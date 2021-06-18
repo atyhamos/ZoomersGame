@@ -11,6 +11,7 @@ public class ConnectToServer : MonoBehaviourPunCallbacks
     {
         if (PhotonNetwork.IsConnected)
             PhotonNetwork.Disconnect();
+        PhotonNetwork.SerializationRate = 20;
         PhotonNetwork.ConnectUsingSettings();
     }
 

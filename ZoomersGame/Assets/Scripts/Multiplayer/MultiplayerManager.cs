@@ -9,7 +9,6 @@ public class MultiplayerManager : MonoBehaviour
     public float minX, maxX, minY, maxY;
     public Text PingText;
     public GameObject PlayerPrefab;
-    private int numberOfPlayers = PhotonNetwork.CurrentRoom.PlayerCount - 1;
     private Vector2 randomPosition;
     private void Start()
     {
@@ -24,5 +23,11 @@ public class MultiplayerManager : MonoBehaviour
     private void Update()
     {
         PingText.text = "Ping: " + PhotonNetwork.GetPing();
+    }
+
+    public void Home()
+    {
+        PhotonNetwork.Destroy(GetComponent<PhotonView>());
+        GameManager.instance.ChangeScene(2);
     }
 }

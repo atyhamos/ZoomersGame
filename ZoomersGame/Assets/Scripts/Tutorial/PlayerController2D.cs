@@ -43,6 +43,10 @@ public class PlayerController2D : MonoBehaviour
         if (moveLeft || moveRight)
             crouch = true;
     }
+    public void Home()
+    {
+        GameManager.instance.ChangeScene(2);
+    }
 
     private void Update()
     {

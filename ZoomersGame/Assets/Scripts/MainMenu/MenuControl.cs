@@ -4,17 +4,18 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Photon.Pun;
-using Firebase.Auth;
-using Firebase;
 
 public class MenuControl : MonoBehaviour
 {
     [SerializeField] private Text welcomeMessage;
     private string userName;
-    private void Start()
+    private void Awake()
     {
         userName = FirebaseManager.instance.user.DisplayName;
-        welcomeMessage.text = $"Welcome, {userName}!";
+        if (userName == null)
+            welcomeMessage.text = "Welcome to Zoomers!";
+        else
+            welcomeMessage.text = $"Welcome, {userName}!";
         PhotonNetwork.NickName = userName; 
     }
     public void Tutorial()
@@ -29,11 +30,4 @@ public class MenuControl : MonoBehaviour
         GameManager.instance.ChangeScene(0);
         Debug.Log(userName + " has signed out");
     }
-    
-    public void Home()
-    {
-        GameManager.instance.ChangeScene(1);
-        PhotonNetwork.Destroy(GetComponent<PhotonView>());
-    }
-
 }
