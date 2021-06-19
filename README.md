@@ -8,7 +8,7 @@ It includes popular features found in other racing games such as:
 - Up to 4 player races
 - Random matchmaking
 - Singleplayer timed race
-- 
+
 ### Milestones
 **Features**
 - Register and Login system using email address
