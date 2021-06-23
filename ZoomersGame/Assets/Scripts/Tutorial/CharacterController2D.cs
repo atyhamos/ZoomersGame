@@ -3,8 +3,8 @@ using UnityEngine.Events;
 
 public class CharacterController2D : MonoBehaviour
 {
-	[SerializeField] private float moveForce = 400f;
-	[SerializeField] private float maxSpeed = 400f;
+	public float moveForce = 400f;
+	public float maxSpeed = 400f;
 	[SerializeField] private float jumpForce = 400f;							// Amount of force added when the player jumps.
 	[Range(0, 1)] [SerializeField] private float slideSpeed = .36f;			// Amount of maxSpeed applied to crouching movement. 1 = 100%
 	[SerializeField] private Transform groundCheck;							// A position marking where to check if the player is grounded.
