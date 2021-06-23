@@ -3,21 +3,27 @@ using UnityEngine.Events;
 
 public class CharacterController2D : MonoBehaviour
 {
-	//[SerializeField] private float moveForce = 400f;
 	[SerializeField] private float maxSpeed = 400f;
 	[SerializeField] private float jumpForce = 400f;							// Amount of force added when the player jumps.
 	[Range(0, 1)] [SerializeField] private float slideSpeed = .36f;			// Amount of maxSpeed applied to crouching movement. 1 = 100%
 	[SerializeField] private Transform groundCheck;							// A position marking where to check if the player is grounded.
-	[SerializeField] private Transform ceilingCheck;							// A position marking where to check for ceilings
+	[SerializeField] private Transform ceilingCheck;                            // A position marking where to check for ceilings
+	[SerializeField] private Transform frontCheck;                            // A position marking where to check for front of player
 	[SerializeField] private Collider2D crouchDisableCollider;              // A collider that will be disabled when crouching
 	[SerializeField] private Collider2D crouchEnableCollider;              // A collider that will be enabled when crouching
 	[SerializeField] private LayerMask m_WhatIsGround;
-	const float groundedRadius = .2f; // Radius of the overlap circle to determine if grounded
+	[SerializeField] private LayerMask m_WhatIsWall;
+	const float groundedRadius = .3f; // Radius of the overlap circle to determine if grounded
 	public bool isGrounded;            // Whether or not the player is grounded.
 	private bool canDoubleJump;
 	const float ceilingRadius = .0625f; // Radius of the overlap circle to determine if the player can stand up
 	private Rigidbody2D rb;
 	private  bool m_FacingRight = true;  // For determining which way the player is currently facing.
+	public bool isTouchingFront; // Checking if there is something in front
+	private bool wallSliding;
+	private bool canWallJump = true;
+	[SerializeField] private float wallSlidingSpeed;
+	const float frontRadius = .2f; // Radius of the overlap circle to determine if player has wall in front
 	private float slideTimer = 0f;
 	public UnityEvent OnLandEvent;
 	public float timeZeroToMaxSpeed = 1f;
@@ -63,6 +69,11 @@ public class CharacterController2D : MonoBehaviour
 					OnLandEvent.Invoke();
 			}
 		}
+		isTouchingFront = Physics2D.OverlapCircle(frontCheck.position, frontRadius, m_WhatIsWall);
+		if (!isTouchingFront)
+			canWallJump = true;
+		if (isGrounded)
+			canDoubleJump = true;
 	}
 
 
@@ -142,24 +153,28 @@ public class CharacterController2D : MonoBehaviour
 		{
 			// ... flip the player.
 			Flip();
-			// rb.velocity = new Vector2(0, rb.velocity.y);
 		}
 		// Otherwise if the input is moving the player left and the player is facing right...
 		else if (move < 0 && m_FacingRight)
 		{
 			// ... flip the player.
 			Flip();
-			// rb.velocity = new Vector2(0, rb.velocity.y);
 		}
 
 		if (move != 0)
-        {
+		{
 			forwardVelocity += accelRatePerSec * Time.fixedDeltaTime;
 			forwardVelocity = Mathf.Min(forwardVelocity, maxSpeed);
 			if (!isSliding)
 				rb.velocity = new Vector2(move * forwardVelocity, rb.velocity.y);
 			else
 				rb.velocity = new Vector2(move * forwardVelocity * slideSpeed, rb.velocity.y);
+			if (isTouchingFront && !isGrounded)
+				wallSliding = true;
+			else
+				wallSliding = false;
+			if (wallSliding)
+				rb.velocity = new Vector2(rb.velocity.x, Mathf.Clamp(rb.velocity.y, -wallSlidingSpeed, float.MaxValue));
 		}
 
 		if (move == 0 && isGrounded)
@@ -174,13 +189,19 @@ public class CharacterController2D : MonoBehaviour
 		{
 			// Add a vertical force to the player.
 			isGrounded = false;
-			rb.velocity = new Vector2(rb.velocity.x, 0.8f * jumpForce);
+			rb.velocity = new Vector2(rb.velocity.x, jumpForce);
 			canDoubleJump = true;
 		}
 		else if (jump && canDoubleJump && !isSliding)
 		{
 			rb.velocity = new Vector2(rb.velocity.x, 0.8f * jumpForce);
 			canDoubleJump = false;
+		}
+		else if (jump && isTouchingFront && canWallJump)
+        {
+			rb.velocity = new Vector2(rb.velocity.x, 0.8f * jumpForce);
+			canWallJump = false;
+			canDoubleJump = true;
 		}
 	}
 
@@ -198,4 +219,16 @@ public class CharacterController2D : MonoBehaviour
 		nameScale.x *= -1;
 		transform.GetChild(0).transform.GetChild(0).localScale = nameScale;
 	}
+
+	private void OnCollisionEnter2D(Collision2D collision)
+	{
+		if (collision.gameObject.tag == "Trampoline")
+			rb.velocity = new Vector2(rb.velocity.x, 100f);
+	}
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+		if (collision.CompareTag("Finish"))
+			GetComponent<Timer>().Finish();
+    }
 }

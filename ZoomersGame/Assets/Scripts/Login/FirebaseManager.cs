@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using Firebase;
 using Firebase.Auth;
+using Firebase.Database;
 using TMPro;
 
 public class FirebaseManager : MonoBehaviour
@@ -11,35 +12,26 @@ public class FirebaseManager : MonoBehaviour
     [Header("Firebase")]
     public FirebaseAuth auth;
     public FirebaseUser user;
+    public DatabaseReference DBreference;
     [Space(5f)]
 
     [Header("Login References")]
-    [SerializeField]
-    private TMP_InputField loginEmail;
-    [SerializeField]
-    private TMP_InputField loginPassword;
-    [SerializeField]
-    private TMP_Text loginOutputText;
+    [SerializeField] private TMP_InputField loginEmail;
+    [SerializeField] private TMP_InputField loginPassword;
+    [SerializeField] private TMP_Text loginOutputText;
     [Space(5f)]
 
     [Header("Register References")]
-    [SerializeField]
-    private TMP_InputField registerUsername;
-    [SerializeField]
-    private TMP_InputField registerEmail;
-    [SerializeField]
-    private TMP_InputField registerPassword;
-    [SerializeField]
-    private TMP_InputField registerConfirmPassword;
-    [SerializeField]
-    private TMP_Text registerOutputText;
+    [SerializeField] private TMP_InputField registerUsername;
+    [SerializeField] private TMP_InputField registerEmail;
+    [SerializeField] private TMP_InputField registerPassword;
+    [SerializeField] private TMP_InputField registerConfirmPassword;
+    [SerializeField] private TMP_Text registerOutputText;
     [Space(5f)]
 
     [Header("Reset Password References")]
-    [SerializeField]
-    private TMP_InputField resetEmail;
-    [SerializeField]
-    private TMP_Text resetOutputText;
+    [SerializeField] private TMP_InputField resetEmail;
+    [SerializeField] private TMP_Text resetOutputText;
 
 
 
@@ -88,7 +80,7 @@ public class FirebaseManager : MonoBehaviour
             AutoLogin();
         }
         else
-            AuthUIManager.instance.LoginScreen();
+            AuthUIManager.instance.LoginScreen();    
     }
 
     private void AutoLogin()
@@ -96,10 +88,9 @@ public class FirebaseManager : MonoBehaviour
         if (user != null)
         {
             if (user.IsEmailVerified)
-            // Move to Loading page
-            {
-                GameManager.instance.ChangeScene(1);
-            }
+            // Move to Loading page                
+                GameManager.instance.ChangeScene(2);
+            
             else
                 StartCoroutine(SendVerificationEmail());
         }
@@ -112,6 +103,7 @@ public class FirebaseManager : MonoBehaviour
         StartCoroutine(CheckAutoLogin());
         auth.StateChanged += AuthStateChanged;
         AuthStateChanged(this, null);
+        DBreference = FirebaseDatabase.DefaultInstance.RootReference;
     }
 
     private void AuthStateChanged(object sender, System.EventArgs eventArgs)
@@ -190,12 +182,9 @@ public class FirebaseManager : MonoBehaviour
         else
         {
             if (user.IsEmailVerified)
-            {
-                // yield return new WaitForSeconds(1f);
-                Screen.autorotateToPortrait = false;
-                Screen.autorotateToLandscapeLeft = true;
-                Screen.orientation = ScreenOrientation.LandscapeLeft;
-                GameManager.instance.ChangeScene(1);
+            { 
+                GameManager.instance.ChangeScene(2);
+                Debug.Log("Logging in!");
             }
             else
             {
@@ -254,7 +243,6 @@ public class FirebaseManager : MonoBehaviour
                 var defaultUserTask = user.UpdateUserProfileAsync(profile);
 
                 yield return new WaitUntil(predicate: () => defaultUserTask.IsCompleted);
-
                 if (defaultUserTask.Exception != null)
                 {
                     user.DeleteAsync();
@@ -277,6 +265,7 @@ public class FirebaseManager : MonoBehaviour
                 {
                     Debug.Log($"Firebase User Created Successfully: {user.DisplayName} ({user.UserId})");
                     StartCoroutine(SendVerificationEmail());
+                    StartCoroutine(UpdateUsernameDatabase(_username));
                 }
             }
         }
@@ -346,5 +335,34 @@ public class FirebaseManager : MonoBehaviour
         {
             resetOutputText.text = $"Instructions on how to reset your password has been sent to {_email}";
         }
+    }
+
+    private IEnumerator UpdateUsernameDatabase(string _username)
+    {
+        var DBTask = DBreference.Child("users").Child(user.UserId).Child("username").SetValueAsync(_username);
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+    }
+
+    private IEnumerator UpdateBestTime(float _raw, string _formatted)
+    {
+        var DBTaskRaw = DBreference.Child("users").Child(user.UserId).Child("singleplayer raw").SetValueAsync(_raw);
+        yield return new WaitUntil(predicate: () => DBTaskRaw.IsCompleted);
+        if (DBTaskRaw.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTaskRaw.Exception}");
+        }
+        Debug.Log($"Raw time updated to {_raw}");
+        var DBTaskFormat = DBreference.Child("users").Child(user.UserId).Child("singleplayer formatted").SetValueAsync(_formatted);
+        yield return new WaitUntil(predicate: () => DBTaskFormat.IsCompleted);
+        if (DBTaskFormat.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTaskFormat.Exception}");
+        }
+        Debug.Log($"Formatted time updated to {_formatted}");
     }
 }

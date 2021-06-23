@@ -6,18 +6,12 @@ public class AuthUIManager : MonoBehaviour
     public static AuthUIManager instance;
 
     [Header("References")]
-    [SerializeField]
-    private GameObject checkingForAccountUI;
-    [SerializeField]
-    private GameObject loginUI;
-    [SerializeField]
-    private GameObject registerUI;
-    [SerializeField]
-    private GameObject resetUI;
-    [SerializeField]
-    private GameObject verifyEmailUI;
-    [SerializeField]
-    private TMP_Text verifyEmailText;
+    [SerializeField] private GameObject checkingForAccountUI;
+    [SerializeField] private GameObject loginUI;
+    [SerializeField] private GameObject registerUI;
+    [SerializeField] private GameObject resetUI;
+    [SerializeField] private GameObject verifyEmailUI;
+    [SerializeField] private TMP_Text verifyEmailText;
 
     private void Awake()
     {

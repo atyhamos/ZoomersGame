@@ -1,5 +1,35 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2483008407388910178
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7105657166316646953}
+  m_Layer: 0
+  m_Name: Front Check
+  m_TagString: Untagged
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7105657166316646953
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2483008407388910178}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.096, y: -0.083000004, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 8257042215642085578}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8257042214690951066
 GameObject:
   m_ObjectHideFlags: 0
@@ -30,7 +60,6 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_Children:
-  - {fileID: 8257042215039388692}
   - {fileID: 8257042215144625770}
   - {fileID: 8257042216256503336}
   - {fileID: 8257042216050399306}
@@ -122,7 +151,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8257042215039388692
 RectTransform:
   m_ObjectHideFlags: 0
@@ -130,17 +159,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8257042215039388699}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0, y: 0, z: 0}
   m_Children:
   - {fileID: 8257042216302477406}
-  m_Father: {fileID: 8257042214690951062}
-  m_RootOrder: 0
+  m_Father: {fileID: 8257042215642085578}
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 353, y: 177.8}
+  m_AnchoredPosition: {x: 0.000030517578, y: 0.000015258789}
   m_SizeDelta: {x: 80, y: 72.578}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8257042215039388688
@@ -270,7 +299,7 @@ RectTransform:
   m_Children:
   - {fileID: 8257042215752880370}
   m_Father: {fileID: 8257042214690951062}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -507,6 +536,8 @@ Transform:
   - {fileID: 8257042214690951062}
   - {fileID: 8257042215572387519}
   - {fileID: 8257042215530433263}
+  - {fileID: 7105657166316646953}
+  - {fileID: 8257042215039388692}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -663,19 +694,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90d43507f8c05db4aaad9b9f3f648b09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxSpeed: 13
+  maxSpeed: 14
   jumpForce: 26
   slideSpeed: 0.8
   groundCheck: {fileID: 8257042215530433263}
   ceilingCheck: {fileID: 8257042215572387519}
+  frontCheck: {fileID: 7105657166316646953}
   crouchDisableCollider: {fileID: 1907421363375223405}
   crouchEnableCollider: {fileID: 9074594735023607902}
   m_WhatIsGround:
     serializedVersion: 2
     m_Bits: 256
+  m_WhatIsWall:
+    serializedVersion: 2
+    m_Bits: 512
   anim: {fileID: 8257042215642085574}
   isGrounded: 0
   canDoubleJump: 0
+  isTouchingFront: 0
+  wallSlidingSpeed: 2
   OnLandEvent:
     m_PersistentCalls:
       m_Calls:
@@ -842,7 +879,7 @@ RectTransform:
   m_Children:
   - {fileID: 6469090362307547611}
   m_Father: {fileID: 8257042214690951062}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
@@ -1139,7 +1176,7 @@ GameObject:
   - component: {fileID: 8257042215974051961}
   - component: {fileID: 8257042215974051960}
   m_Layer: 7
-  m_Name: CM vcam1
+  m_Name: Virtual Camera
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1275,7 +1312,7 @@ RectTransform:
   m_Children:
   - {fileID: 8257042216636878784}
   m_Father: {fileID: 8257042214690951062}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
@@ -1505,7 +1542,7 @@ RectTransform:
   m_Children:
   - {fileID: 8257042216407389156}
   m_Father: {fileID: 8257042214690951062}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
