@@ -16,6 +16,7 @@ public class PlayerData : MonoBehaviour
 
     private void Awake()
     {
+        DontDestroyOnLoad(gameObject);
         if (instance == null)
             instance = this;
         else if (instance != this)
@@ -34,11 +35,11 @@ public class PlayerData : MonoBehaviour
             user = FirebaseManager.instance.user;
             DBreference = FirebaseManager.instance.DBreference;
         }
-        StartCoroutine(LoadUserData());
-        StartCoroutine(LoadScoreboardData());
+        Debug.Log("here");
+        StartCoroutine(LoadData());
     }
 
-    private IEnumerator LoadUserData()
+    private IEnumerator LoadData()
     {
         var DBTask = DBreference.Child("users").Child(user.UserId).GetValueAsync();
 
@@ -62,11 +63,8 @@ public class PlayerData : MonoBehaviour
             bestTime = snapshot.Child("singleplayer formatted").Value.ToString();
             bestRawTime = (float)(double)snapshot.Child("singleplayer raw").GetValue(false);
         }
-    }
 
-    private IEnumerator LoadScoreboardData()
-    {
-        var DBTask = DBreference.Child("users").OrderByChild("singleplayer raw").GetValueAsync();
+        DBTask = DBreference.Child("users").OrderByChild("singleplayer raw").GetValueAsync();
 
         yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
 
@@ -80,6 +78,10 @@ public class PlayerData : MonoBehaviour
             float leaderRaw = float.MaxValue;
             foreach (DataSnapshot childSnapshot in snapshot.Children)
             {
+                //leaderRaw = (float)(double)childSnapshot.Child("singleplayer raw").GetValue(false);
+                //leaderName = childSnapshot.Child("username").Value.ToString();
+                //leaderTime = childSnapshot.Child("singleplayer formatted").Value.ToString();
+                //break;
                 float childRaw = (float)(double)childSnapshot.Child("singleplayer raw").GetValue(false);
                 if (childRaw < leaderRaw)
                 {
@@ -91,7 +93,44 @@ public class PlayerData : MonoBehaviour
                     continue;
             }
         }
+        MenuControl.instance.UpdateScore(bestTime, leaderTime, leaderName);
     }
+
+   // private IEnumerator LoadScoreboardData()
+   // {
+   //     var DBTask = DBreference.Child("users").GetValueAsync();
+   //
+   //     yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+   //
+   //     if (DBTask.Exception != null)
+   //     {
+   //         Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+   //     }
+   //     else
+   //     {
+   //         DataSnapshot snapshot = DBTask.Result;
+   //         float leaderRaw = float.MaxValue;
+   //         
+   //         foreach (DataSnapshot childSnapshot in snapshot.Children)
+   //         {
+   //             //leaderRaw = (float)(double)childSnapshot.Child("singleplayer raw").GetValue(false);
+   //             //leaderName = childSnapshot.Child("username").Value.ToString();
+   //             //leaderTime = childSnapshot.Child("singleplayer formatted").Value.ToString();
+   //             //break;
+   //             float childRaw = (float)(double)childSnapshot.Child("singleplayer raw").GetValue(false);
+   //             if (childRaw > leaderRaw)
+   //             {
+   //                 leaderRaw = childRaw;
+   //                 leaderName = childSnapshot.Child("username").Value.ToString();
+   //                 leaderTime = childSnapshot.Child("singleplayer formatted").Value.ToString();
+   //                 Debug.Log(leaderName + $" {leaderTime}");
+   //             }
+   //             else
+   //                 continue;
+   //         }
+   //     }
+   //     MenuControl.instance.UpdateScore(bestTime, leaderTime, leaderName);
+   // }
 
     private IEnumerator UpdateUsernameDatabase(string _username)
     {
@@ -102,5 +141,10 @@ public class PlayerData : MonoBehaviour
         {
             Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
         }
+    }
+
+    public void RefreshData()
+    {
+        StartCoroutine(LoadData());
     }
 }

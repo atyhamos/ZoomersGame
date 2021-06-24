@@ -8,12 +8,19 @@ using Photon.Realtime;
 
 public class MenuControl : MonoBehaviourPunCallbacks
 {
+    public static MenuControl instance;
     [SerializeField] private Text welcomeMessage;
     [SerializeField] private Text playerStats;
     [SerializeField] private Text leaderBoard;
     private string userName;
+
     private void Awake()
     {
+        if (instance == null)
+            instance = this;
+        else if (instance != this)
+            Destroy(gameObject);
+
         if (FirebaseManager.instance == null)
             userName = FirebaseAutoLogin.instance.user.DisplayName;
         else
@@ -25,6 +32,12 @@ public class MenuControl : MonoBehaviourPunCallbacks
             welcomeMessage.text = $"Welcome, {userName}!";
 
         PhotonNetwork.NickName = userName;
+    }
+
+    private void Start()
+    {
+        playerStats.text = PlayerData.instance.bestTime;
+        leaderBoard.text = PlayerData.instance.leaderName + $" ({PlayerData.instance.leaderTime})";
     }
     public void Tutorial()
     {
@@ -53,9 +66,9 @@ public class MenuControl : MonoBehaviourPunCallbacks
         base.OnDisconnected(cause);
     }
 
-    private void Start()
+    public void UpdateScore(string bestTime, string leaderTime, string leaderName)
     {
-        playerStats.text += PlayerData.instance.bestTime;
-        leaderBoard.text += PlayerData.instance.leaderName + $" ({PlayerData.instance.leaderTime})";
+        playerStats.text = bestTime;
+        leaderBoard.text = leaderName + $" ({leaderTime})";
     }
 }

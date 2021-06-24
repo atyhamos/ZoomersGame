@@ -8,12 +8,22 @@ public class CherryPowerUp : MonoBehaviour
     {
         if (collision.CompareTag("Player"))
         {
-            Pickup();
+            if (collision.GetComponent<PowerUp>().hasPowerUp == false)
+            {
+                Pickup(collision);
+                collision.GetComponent<PowerUp>().button.SetActive(true);
+            }
         }
     }
 
-    private void Pickup()
+    void Pickup(Collider2D player)
     {
         Debug.Log("Picked up cherry!");
+
+        PowerUp powerUp = player.GetComponent<PowerUp>();
+
+        powerUp.hasPowerUp = true;
+
+        Destroy(gameObject);
     }
 }

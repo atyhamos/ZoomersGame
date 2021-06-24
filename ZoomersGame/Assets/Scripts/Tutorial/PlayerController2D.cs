@@ -8,6 +8,7 @@ public class PlayerController2D : MonoBehaviour
 {
     [SerializeField] Animator animator;
     [SerializeField] CharacterController2D controller;
+    [SerializeField] PowerUp powerUp;
     Rigidbody2D rb;
     public GameObject PlayerCamera;
     public GameObject PlayerButtons;
@@ -20,6 +21,7 @@ public class PlayerController2D : MonoBehaviour
     {
         PlayerNameText.text = PhotonNetwork.NickName;
         rb = GetComponent<Rigidbody2D>();
+        powerUp = GetComponent<PowerUp>();
         moveLeft = false;
         moveRight = false;
         crouch = false;
@@ -43,9 +45,14 @@ public class PlayerController2D : MonoBehaviour
         if (moveLeft || moveRight)
             crouch = true;
     }
+    public void ConsumePower()
+    {
+        if (powerUp.hasPowerUp)
+            powerUp.Consume();
+    }
     public void Home()
     {
-        GameManager.instance.ChangeScene(2);
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Loading");
     }
 
     private void Update()
@@ -90,6 +97,10 @@ public class PlayerController2D : MonoBehaviour
             animator.SetBool("IsJumping", true);
             animator.SetBool("IsFalling", false);
         }
+
+        if (Input.GetButtonDown("PowerUp"))
+            ConsumePower();
+
     }
 
     public void OnLanding()

@@ -65,12 +65,6 @@ public class MultiplayerController : MonoBehaviour
             if (moveLeft || moveRight)
                 crouch = true;
     }
-    public void Home()
-    {
-        GameManager.instance.ChangeScene(2);
-        PhotonNetwork.Destroy(view);
-        PhotonNetwork.LeaveRoom();
-    }
 
     [PunRPC]
     private void FlipTrue()
