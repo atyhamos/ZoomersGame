@@ -118,6 +118,5 @@ public class Timer : MonoBehaviour
             Debug.LogWarning(message: $"Failed to register task with {DBTaskFormat.Exception}");
         }
         Debug.Log($"Formatted time updated to {_formatted}");
-        PlayerData.instance.RefreshData();
     }
 }

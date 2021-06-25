@@ -45,7 +45,7 @@ public class MultiplayerManager : MonoBehaviour
     public void Home()
     {
         CreateAndJoinRoom.instance.LeaveRoom();
-        SceneManager.LoadScene("Loading");
+        GameManager.instance.ChangeScene(3);
     }
 
 

@@ -8,15 +8,10 @@ public class ConnectToServer : MonoBehaviourPunCallbacks
 {
     private void Start()
     {
-        if (PhotonNetwork.IsConnected && PhotonNetwork.NetworkClientState == Photon.Realtime.ClientState.Leaving) // rejoining
+        if (PhotonNetwork.IsConnected)
             return;
-        else if (PhotonNetwork.InLobby)
-            SceneManager.LoadScene("MainMenu");
-        else
-        {
-            PhotonNetwork.SerializationRate = 20;
-            PhotonNetwork.ConnectUsingSettings();
-        }
+        PhotonNetwork.SerializationRate = 20;
+        PhotonNetwork.ConnectUsingSettings();
     }
 
     public override void OnConnectedToMaster()
@@ -27,6 +22,6 @@ public class ConnectToServer : MonoBehaviourPunCallbacks
 
     public override void OnJoinedLobby()
     {
-        SceneManager.LoadScene("MainMenu");
+        GameManager.instance.ChangeScene(3);
     }
 }
