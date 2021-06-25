@@ -73,6 +73,11 @@ public class Timer : MonoBehaviour
         timerText.color = Color.green;
     }
 
+    public string GiveTime()
+    {
+        return timerText.text;
+    }
+
     private void DisableButtons()
     {
         activeButtons.SetActive(false);

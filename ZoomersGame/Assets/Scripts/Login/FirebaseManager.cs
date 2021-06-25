@@ -265,7 +265,7 @@ public class FirebaseManager : MonoBehaviour
                 {
                     Debug.Log($"Firebase User Created Successfully: {user.DisplayName} ({user.UserId})");
                     StartCoroutine(SendVerificationEmail());
-                    StartCoroutine(UpdateUsernameDatabase(_username));
+                    StartCoroutine(UpdateUserDatabase(_username));
                 }
             }
         }
@@ -337,9 +337,25 @@ public class FirebaseManager : MonoBehaviour
         }
     }
 
-    private IEnumerator UpdateUsernameDatabase(string _username)
+    private IEnumerator UpdateUserDatabase(string _username)
     {
         var DBTask = DBreference.Child("users").Child(user.UserId).Child("username").SetValueAsync(_username);
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+
+        DBTask = DBreference.Child("users").Child(user.UserId).Child("singleplayer formatted").SetValueAsync("Have not attempted");
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+
+        DBTask = DBreference.Child("users").Child(user.UserId).Child("singleplayer raw").SetValueAsync(float.MaxValue);
         yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
 
         if (DBTask.Exception != null)

@@ -223,12 +223,44 @@ public class CharacterController2D : MonoBehaviour
 	private void OnCollisionEnter2D(Collision2D collision)
 	{
 		if (collision.gameObject.tag == "Trampoline")
+        {
+			GetComponent<Animator>().SetBool("IsJumping", true);
+			GetComponent<Animator>().SetBool("IsFalling", false);
 			rb.velocity = new Vector2(rb.velocity.x, 100f);
+        }
 	}
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
 		if (collision.CompareTag("Finish"))
+        {
+			GetComponent<PlayerController2D>().StopMoving();
 			GetComponent<Timer>().Finish();
+        }
+
+		if (collision.CompareTag("PowerUp"))
+        {
+			PlayerController2D player = GetComponent<PlayerController2D>();
+			if (!player.hasPowerUp)
+            {
+				PowerUp power = collision.gameObject.GetComponent<PowerUp>();
+				power.Pickup(this, player);
+				player.currentPowerUp = power;
+				player.hasPowerUp = true;
+			}
+		}
+
+		if (collision.CompareTag("Random"))
+        {
+			PlayerController2D player = GetComponent<PlayerController2D>();
+			if (!player.hasPowerUp)
+            {
+				PowerUp power = collision.GetComponent<RandomPowerUp>().GetRandomPower();
+				power.Pickup(this, player);
+				player.currentPowerUp = power;
+				player.hasPowerUp = true;
+            }
+        }
     }
+
 }

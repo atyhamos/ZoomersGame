@@ -7,6 +7,9 @@ TagManager:
   - Bullet
   - Leader
   - Trampoline
+  - PowerUp
+  - Random
+  - TutorialPanel
   layers:
   - Default
   - TransparentFX

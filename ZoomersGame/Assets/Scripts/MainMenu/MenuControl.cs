@@ -39,6 +39,12 @@ public class MenuControl : MonoBehaviourPunCallbacks
         playerStats.text = PlayerData.instance.bestTime;
         leaderBoard.text = PlayerData.instance.leaderName + $" ({PlayerData.instance.leaderTime})";
     }
+    private void Update()
+    {
+        playerStats.text = PlayerData.instance.bestTime;
+        leaderBoard.text = PlayerData.instance.leaderName + $" ({PlayerData.instance.leaderTime})";
+    }
+
     public void Tutorial()
     {
         GameManager.instance.ChangeScene(4);

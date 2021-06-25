@@ -93,7 +93,6 @@ public class PlayerData : MonoBehaviour
                     continue;
             }
         }
-        MenuControl.instance.UpdateScore(bestTime, leaderTime, leaderName);
     }
 
    // private IEnumerator LoadScoreboardData()

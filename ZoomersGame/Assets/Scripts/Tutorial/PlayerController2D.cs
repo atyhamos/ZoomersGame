@@ -8,12 +8,12 @@ public class PlayerController2D : MonoBehaviour
 {
     [SerializeField] Animator animator;
     [SerializeField] CharacterController2D controller;
-    [SerializeField] PowerUp powerUp;
     Rigidbody2D rb;
     public GameObject PlayerCamera;
     public GameObject PlayerButtons;
     public Text PlayerNameText;
-
+    public bool hasPowerUp, usingPowerUp;
+    public PowerUp previousPowerUp, currentPowerUp;
     private bool moveLeft, moveRight, jump, crouch;
     private int horizontalMove;
 
@@ -21,7 +21,6 @@ public class PlayerController2D : MonoBehaviour
     {
         PlayerNameText.text = PhotonNetwork.NickName;
         rb = GetComponent<Rigidbody2D>();
-        powerUp = GetComponent<PowerUp>();
         moveLeft = false;
         moveRight = false;
         crouch = false;
@@ -45,10 +44,27 @@ public class PlayerController2D : MonoBehaviour
         if (moveLeft || moveRight)
             crouch = true;
     }
+
+    public void StopMoving()
+    {
+        moveLeft = false;
+        moveRight = false;
+        jump = false;
+        crouch = false;
+    }
     public void ConsumePower()
     {
-        if (powerUp.hasPowerUp)
-            powerUp.Consume();
+        if (hasPowerUp)
+        {
+            if (usingPowerUp)
+            {
+                Debug.Log("Cancelling previous power... Powers do not stack!");
+                previousPowerUp.Cancel();
+            }
+            currentPowerUp.Consume();
+            previousPowerUp = currentPowerUp;
+            currentPowerUp = null;
+        }
     }
     public void Home()
     {
