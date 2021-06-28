@@ -6,22 +6,27 @@ Zoomers is a 2D, multiplayer racing game built for Android devices.
 It includes popular features found in other racing games such as:
 - Power ups and traps
 - Up to 4 player races
-- Random matchmaking
+- Online matchmaking
 - Singleplayer timed race
 
-### Milestones
-**Features**
-- Register and Login system using email address
-- Reset password
+### Features
 - Tutorial
-- Online room creation and joining
+- Singleplayer
+- Power Ups
+- Leaderboard
 
 **To be added**
-- Singleplayer timed race
-- Power ups
+- Online matchmaking
 - Google account authentication for registering
-- Matchmaking system for random lobbies
+- Friend system
+- More power ups and maps
 
-### Play now
-Download the .apk file here and jump right into the action!
-(apk will be available at a later date)
+## Gameplay
+![image](https://drive.google.com/uc?export=view&id=1KmwWtv5M3YYpJ1aloLF1-Hhb7gUem_XW)
+
+![image](https://drive.google.com/uc?export=view&id=11rb0tCnrOX_Pk7xAQL6q-djxEwsfarg2)
+
+## Built using
+- Unity
+- Firebase
+- Photon
