@@ -368,7 +368,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &5009821056579563475
 RectTransform:
   m_ObjectHideFlags: 0
@@ -380,10 +380,10 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 6198991332711386553}
   - {fileID: 2261942429386846821}
-  m_Father: {fileID: 8257042215642085578}
-  m_RootOrder: 6
+  - {fileID: 6198991332711386553}
+  m_Father: {fileID: 8257042214690951062}
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
@@ -646,7 +646,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 5009821056579563475}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -735,8 +735,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: PlayerController2D, Assembly-CSharp
+      - m_Target: {fileID: 6114903624226235018}
+        m_TargetAssemblyTypeName: MultiplayerController, Assembly-CSharp
         m_MethodName: ConsumePower
         m_Mode: 1
         m_Arguments:
@@ -914,6 +914,36 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
+--- !u!1 &6846218276053335926
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 851838549923909764}
+  m_Layer: 0
+  m_Name: Trap Placement
+  m_TagString: Untagged
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &851838549923909764
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6846218276053335926}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.129, y: -0.103, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 8257042215642085578}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7169532125602268100
 GameObject:
   m_ObjectHideFlags: 0
@@ -1336,6 +1366,7 @@ RectTransform:
   - {fileID: 8572469169886526171}
   - {fileID: 1841465226811481570}
   - {fileID: 709168722271314316}
+  - {fileID: 5009821056579563475}
   m_Father: {fileID: 8257042215642085578}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1509,7 +1540,7 @@ Transform:
   - {fileID: 8257042215572387519}
   - {fileID: 8257042215530433263}
   - {fileID: 7105657166316646953}
-  - {fileID: 5009821056579563475}
+  - {fileID: 851838549923909764}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1650,10 +1681,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animator: {fileID: 8257042215642085574}
   controller: {fileID: 7063245382834786212}
+  CherryPowerButton: {fileID: 6457860476528587499}
+  BoxPowerButton: {fileID: 8644046709257211263}
   PlayerCamera: {fileID: 8257042215974051966}
   PlayerButtons: {fileID: 8257042214690951066}
   PlayerNameText: {fileID: 8257042216213247536}
   Sprite: {fileID: 8257042215642085569}
+  hasPowerUp: 0
+  usingPowerUp: 0
+  previousPowerUp: {fileID: 0}
+  currentPowerUp: {fileID: 0}
 --- !u!114 &7063245382834786212
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1701,6 +1738,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   timeZeroToMaxSpeed: 1
+  trapPlacement: {fileID: 851838549923909764}
   OnSlideEvent:
     m_PersistentCalls:
       m_Calls:
@@ -2231,7 +2269,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 5009821056579563475}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -2320,8 +2358,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: PlayerController2D, Assembly-CSharp
+      - m_Target: {fileID: 6114903624226235018}
+        m_TargetAssemblyTypeName: MultiplayerController, Assembly-CSharp
         m_MethodName: ConsumePower
         m_Mode: 1
         m_Arguments:

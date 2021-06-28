@@ -8,13 +8,16 @@ public class MultiplayerController : MonoBehaviour
 {
     [SerializeField] Animator animator;
     [SerializeField] MultiCharacterController controller;
+    [SerializeField] private GameObject CherryPowerButton;
+    [SerializeField] private GameObject BoxPowerButton;
     private Rigidbody2D rb;
     private PhotonView view;
     public GameObject PlayerCamera;
     public GameObject PlayerButtons;
     public Text PlayerNameText;
     public SpriteRenderer Sprite;
-
+    public bool hasPowerUp, usingPowerUp;
+    public MultiPowerUp previousPowerUp, currentPowerUp;
     private bool moveLeft, moveRight, jump, crouch;
     private int horizontalMove;
 
@@ -42,7 +45,6 @@ public class MultiplayerController : MonoBehaviour
         moveRight = false;
         crouch = false;
     }
-
     public void MoveLeft()
     {
         if (view.IsMine)
@@ -65,6 +67,27 @@ public class MultiplayerController : MonoBehaviour
             if (moveLeft || moveRight)
                 crouch = true;
     }
+    public void ConsumePower()
+    {
+        if (hasPowerUp)
+        {
+            if (usingPowerUp)
+            {
+                Debug.Log("Cancelling previous power... Powers do not stack!");
+                previousPowerUp.Cancel();
+            }
+            currentPowerUp.Consume();
+            previousPowerUp = currentPowerUp;
+            currentPowerUp = null;
+        }
+    }
+    public void StopMoving()
+    {
+        moveLeft = false;
+        moveRight = false;
+        jump = false;
+        crouch = false;
+    }
 
     [PunRPC]
     private void FlipTrue()
@@ -82,13 +105,7 @@ public class MultiplayerController : MonoBehaviour
     {
         if (view.IsMine)
         {
-        //    // debugging weird jumping animation while grounded
-        //    if (controller.isGrounded)
-        //    {
-        //        animator.SetBool("IsJumping", false);
-        //        animator.SetBool("IsFalling", false);
-        //    }
-            
+           
             moveLeft = moveLeft || Input.GetButtonDown("Left");
             if (moveLeft)
             {
@@ -117,17 +134,35 @@ public class MultiplayerController : MonoBehaviour
             animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
 
             jump = jump || Input.GetButtonDown("Jump");
-
-            // cannot jump while sliding
-        //    if (jump && !controller.isSliding)
-        //    {
-        //        animator.SetBool("IsJumping", true);
-        //        animator.SetBool("IsFalling", false);
-        //    }
-            if (!controller.isGrounded && rb.velocity.y < -0.01)
+           
+            // debugging weird jumping animation while grounded
+            if (controller.isGrounded)
+            {
+                animator.SetBool("IsJumping", false);
+                animator.SetBool("IsFalling", false);
+            }
+            else if (!controller.isGrounded && rb.velocity.y < -0.01)
             {
                 animator.SetBool("IsJumping", false);
                 animator.SetBool("IsFalling", true);
+            }
+            // cannot jump while sliding
+            if (jump && !controller.isSliding)
+            {
+                animator.SetBool("IsJumping", true);
+                animator.SetBool("IsFalling", false);
+            }
+            if (Input.GetButtonDown("PowerUp"))
+                ConsumePower();
+            if (hasPowerUp)
+                if (currentPowerUp.GetType().ToString() == "MultiCherryPowerUp")
+                    CherryPowerButton.SetActive(true);
+                else
+                    BoxPowerButton.SetActive(true);
+            else if (!hasPowerUp)
+            {
+                CherryPowerButton.SetActive(false);
+                BoxPowerButton.SetActive(false);
             }
         }
     }

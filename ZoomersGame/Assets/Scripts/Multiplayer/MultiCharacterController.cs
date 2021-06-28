@@ -3,7 +3,7 @@ using UnityEngine.Events;
 
 public class MultiCharacterController : MonoBehaviour
 {
-	[SerializeField] private float maxSpeed = 400f;
+	public float maxSpeed = 400f;
 	[SerializeField] private float jumpForce = 400f;                            // Amount of force added when the player jumps.
 	[Range(0, 1)] [SerializeField] private float slideSpeed = .36f;         // Amount of maxSpeed applied to crouching movement. 1 = 100%
 	[SerializeField] private Transform groundCheck;                         // A position marking where to check if the player is grounded.
@@ -30,6 +30,7 @@ public class MultiCharacterController : MonoBehaviour
 	public float timeZeroToMaxSpeed = 1f;
 	float accelRatePerSec;
 	float forwardVelocity;
+	public Transform trapPlacement;
 
 	[System.Serializable]
 	public class BoolEvent : UnityEvent<bool> { }
@@ -219,9 +220,14 @@ public class MultiCharacterController : MonoBehaviour
 		// Switch the way the player is labelled as facing.
 		m_FacingRight = !m_FacingRight;
 		
-		Vector3 frontCheckPosition = transform.GetChild(5).localPosition;
+		// Flip the Front check position
+		Vector3 frontCheckPosition = frontCheck.localPosition;
 		frontCheckPosition.x *= -1;
-		transform.GetChild(5).localPosition = frontCheckPosition;
+		frontCheck.localPosition = frontCheckPosition;
+
+		Vector3 trapCheckPlacement = trapPlacement.localPosition;
+		trapCheckPlacement.x *= -1;
+		trapPlacement.localPosition = trapCheckPlacement;
 	}
 	private void OnCollisionEnter2D(Collision2D collision)
 	{
@@ -231,5 +237,37 @@ public class MultiCharacterController : MonoBehaviour
 			anim.SetBool("IsFalling", false);
 			rb.velocity = new Vector2(rb.velocity.x, 100f);
         }
+	}
+
+	private void OnTriggerEnter2D(Collider2D collision)
+	{
+		MultiplayerController player = GetComponent<MultiplayerController>();
+		if (collision.CompareTag("Finish"))
+		{
+			player.StopMoving();
+			GetComponent<Timer>().Finish();
+		}
+
+		if (collision.CompareTag("PowerUp"))
+		{
+			if (!player.hasPowerUp)
+			{
+				MultiPowerUp power = collision.gameObject.GetComponent<MultiPowerUp>();
+				power.Pickup(this, player);
+				player.currentPowerUp = power;
+				player.hasPowerUp = true;
+			}
+		}
+
+		if (collision.CompareTag("Random"))
+		{
+			if (!player.hasPowerUp)
+			{
+				MultiPowerUp power = collision.GetComponent<MultiRandomPowerUp>().GetRandomPower();
+				power.Pickup(this, player);
+				player.currentPowerUp = power;
+				player.hasPowerUp = true;
+			}
+		}
 	}
 }
