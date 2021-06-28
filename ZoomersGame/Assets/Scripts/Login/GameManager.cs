@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
+    public string rejoinCode;
 
     private void Awake()
     {
@@ -18,18 +19,18 @@ public class GameManager : MonoBehaviour
 
     public void ChangeScene(int _sceneIndex)
     {
-        if (_sceneIndex > 0)
+        SceneManager.LoadSceneAsync(_sceneIndex);
+        if (_sceneIndex > 1)
         {
             Screen.autorotateToPortrait = false;
             Screen.autorotateToLandscapeLeft = true;
             Screen.orientation = ScreenOrientation.LandscapeLeft;
         }
-        else if (_sceneIndex == 0)
+        else if (_sceneIndex == 1)
         {
             Screen.autorotateToPortrait = true;
             Screen.autorotateToLandscapeLeft = false;
             Screen.orientation = ScreenOrientation.Portrait;
         }
-        SceneManager.LoadSceneAsync(_sceneIndex);
     }
 }

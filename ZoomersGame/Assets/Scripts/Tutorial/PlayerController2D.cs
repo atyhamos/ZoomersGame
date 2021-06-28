@@ -1,17 +1,25 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using Photon.Pun;
 
 public class PlayerController2D : MonoBehaviour
 {
     [SerializeField] Animator animator;
     [SerializeField] CharacterController2D controller;
     Rigidbody2D rb;
+    public GameObject PlayerCamera;
+    public GameObject PlayerButtons;
+    public Text PlayerNameText;
+    public bool hasPowerUp, usingPowerUp;
+    public PowerUp previousPowerUp, currentPowerUp;
     private bool moveLeft, moveRight, jump, crouch;
     private int horizontalMove;
 
     void Start()
     {
+        PlayerNameText.text = PhotonNetwork.NickName;
         rb = GetComponent<Rigidbody2D>();
         moveLeft = false;
         moveRight = false;
@@ -34,48 +42,81 @@ public class PlayerController2D : MonoBehaviour
     public void Crouch()
     {
         if (moveLeft || moveRight)
-        {
             crouch = true;
+    }
+
+    public void StopMoving()
+    {
+        moveLeft = false;
+        moveRight = false;
+        jump = false;
+        crouch = false;
+    }
+    public void ConsumePower()
+    {
+        if (hasPowerUp)
+        {
+            if (usingPowerUp)
+            {
+                Debug.Log("Cancelling previous power... Powers do not stack!");
+                previousPowerUp.Cancel();
+            }
+            currentPowerUp.Consume();
+            previousPowerUp = currentPowerUp;
+            currentPowerUp = null;
         }
+    }
+    public void Home()
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Loading");
     }
 
     private void Update()
     {
         moveLeft = moveLeft || Input.GetButtonDown("Left");
         if (moveLeft)
-            horizontalMove = -1;
+            horizontalMove = -1;    
+        
         if (Input.GetButtonUp("Left"))
             moveLeft = false;
 
         moveRight = moveRight || Input.GetButtonDown("Right");
         if (moveRight)
             horizontalMove = 1;
+    
         if (Input.GetButtonUp("Right"))
             moveRight = false;
-        
+
         if (!moveLeft && !moveRight)
             horizontalMove = 0;
-        
+
         crouch = crouch || Input.GetButtonDown("Crouch") || Input.GetButtonUp("Crouch");
-        
+
         animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
-        
+
         jump = jump || Input.GetButtonDown("Jump");
+
+        // debugging weird jumping animation while grounded
         if (controller.isGrounded)
         {
             animator.SetBool("IsJumping", false);
             animator.SetBool("IsFalling", false);
         }
-        else if (rb.velocity.y < -0.01)
+        else if (!controller.isGrounded && rb.velocity.y < -0.01)
         {
             animator.SetBool("IsJumping", false);
             animator.SetBool("IsFalling", true);
         }
-        if (jump)
+        // cannot jump while sliding
+        if (jump && !controller.isSliding)
         {
             animator.SetBool("IsJumping", true);
             animator.SetBool("IsFalling", false);
         }
+
+        if (Input.GetButtonDown("PowerUp"))
+            ConsumePower();
+
     }
 
     public void OnLanding()
@@ -90,9 +131,8 @@ public class PlayerController2D : MonoBehaviour
 
     private void FixedUpdate()
     {
-        controller.Move(horizontalMove * Time.fixedDeltaTime, crouch, jump);
+        controller.Move(horizontalMove, crouch, jump);
         jump = false;
         crouch = false;
-       
     }
 }
