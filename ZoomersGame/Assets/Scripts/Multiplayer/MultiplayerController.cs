@@ -13,6 +13,7 @@ public class MultiplayerController : MonoBehaviour
     private Rigidbody2D rb;
     private PhotonView view;
     public GameObject PlayerCamera;
+    public GameObject LeaderCamera;
     public GameObject PlayerButtons;
     public Text PlayerNameText;
     public SpriteRenderer Sprite;
@@ -20,6 +21,10 @@ public class MultiplayerController : MonoBehaviour
     public MultiPowerUp previousPowerUp, currentPowerUp;
     private bool moveLeft, moveRight, jump, crouch;
     private int horizontalMove;
+    public int checkpointsCrossed = 0;
+    public Transform nextCheckpoint;
+    public int rank = 0;
+    private MultiplayerManager Manager;
 
     private void Awake()
     {
@@ -36,11 +41,14 @@ public class MultiplayerController : MonoBehaviour
             PlayerNameText.text = view.Owner.NickName;
             PlayerNameText.color = Color.white;
         }
+        Manager = GameObject.Find("MultiplayerManager").GetComponent<MultiplayerManager>();
+        Manager.AddPlayer(this);
     }
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        nextCheckpoint = GameObject.Find("Checkpoint 1").transform;
         moveLeft = false;
         moveRight = false;
         crouch = false;
@@ -164,7 +172,22 @@ public class MultiplayerController : MonoBehaviour
                 CherryPowerButton.SetActive(false);
                 BoxPowerButton.SetActive(false);
             }
+            if (rank > 1)
+            {
+                LeaderCamera.SetActive(true);
+                PlayerCamera.SetActive(false);
+            }
+            if (rank == 1)
+                PlayerCamera.SetActive(true);
         }
+    }
+
+    public void UpdateCheckpoint(Transform checkpoint)
+    {
+        Debug.Log("Updating next checkpoint...");
+        nextCheckpoint = checkpoint;
+        checkpointsCrossed++;
+        MultiplayerManager.instance.RankRacers();
     }
 
     public void OnLanding()

@@ -10,6 +10,7 @@ TagManager:
   - PowerUp
   - Random
   - TutorialPanel
+  - Checkpoint
   layers:
   - Default
   - TransparentFX

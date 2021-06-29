@@ -269,5 +269,14 @@ public class MultiCharacterController : MonoBehaviour
 				player.hasPowerUp = true;
 			}
 		}
+
+		if (collision.CompareTag("Checkpoint"))
+        {
+			if (player.nextCheckpoint == collision.transform) // Correct checkpoint
+            {
+				Debug.Log("Crossed correct checkpoint!");
+				player.UpdateCheckpoint(collision.gameObject.GetComponent<CheckpointManager>().Next());
+            }
+        }
 	}
 }

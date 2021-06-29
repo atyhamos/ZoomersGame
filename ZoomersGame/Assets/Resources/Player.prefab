@@ -1518,7 +1518,7 @@ GameObject:
   - component: {fileID: 4906739778896877379}
   m_Layer: 7
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1684,6 +1684,7 @@ MonoBehaviour:
   CherryPowerButton: {fileID: 6457860476528587499}
   BoxPowerButton: {fileID: 8644046709257211263}
   PlayerCamera: {fileID: 8257042215974051966}
+  LeaderCamera: {fileID: 0}
   PlayerButtons: {fileID: 8257042214690951066}
   PlayerNameText: {fileID: 8257042216213247536}
   Sprite: {fileID: 8257042215642085569}
@@ -1691,6 +1692,9 @@ MonoBehaviour:
   usingPowerUp: 0
   previousPowerUp: {fileID: 0}
   currentPowerUp: {fileID: 0}
+  checkpointsCrossed: 0
+  nextCheckpoint: {fileID: 0}
+  rank: 0
 --- !u!114 &7063245382834786212
 MonoBehaviour:
   m_ObjectHideFlags: 0
