@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Photon.Pun;
 using Photon.Realtime;
+using Cinemachine;
 public class MultiplayerController : MonoBehaviour
 {
     [SerializeField] Animator animator;
@@ -22,6 +23,7 @@ public class MultiplayerController : MonoBehaviour
     private bool moveLeft, moveRight, jump, crouch;
     private int horizontalMove;
     public int checkpointsCrossed = 0;
+    public float orthSize;
     public Transform nextCheckpoint;
     public int rank = 0;
     private MultiplayerManager Manager;
@@ -176,16 +178,30 @@ public class MultiplayerController : MonoBehaviour
             {
                 LeaderCamera.SetActive(true);
                 PlayerCamera.SetActive(false);
+                if (MultiBoundsCheck.instance.WithinBounds(transform))
+                {
+                    Debug.Log("Within bounds!");
+                }
+                else
+                {
+                    Debug.Log("Not in bounds");
+                    PlayerButtons.SetActive(false);
+                    MultiplayerManager.instance.Lose();
+                }
             }
             if (rank == 1)
+            {
                 PlayerCamera.SetActive(true);
+                MultiBoundsCheck.instance.UpdateSize(PlayerCamera.GetComponent<CinemachineVirtualCamera>(), orthSize);
+            }
         }
     }
 
-    public void UpdateCheckpoint(Transform checkpoint)
+    public void UpdateCheckpoint(CheckpointManager checkpoint)
     {
         Debug.Log("Updating next checkpoint...");
-        nextCheckpoint = checkpoint;
+        orthSize = checkpoint.orthographicSize;
+        nextCheckpoint = checkpoint.Next();
         checkpointsCrossed++;
         MultiplayerManager.instance.RankRacers();
     }
@@ -204,7 +220,7 @@ public class MultiplayerController : MonoBehaviour
     {
         if (view.IsMine)
         {
-            controller.Move(horizontalMove, crouch, jump);
+            controller.Move(horizontalMove, crouch, jump, view);
             jump = false;
             crouch = false;
         }

@@ -11,6 +11,7 @@ public class MultiplayerManager : MonoBehaviour
     [SerializeField] private Text PingText;
     [SerializeField] private GameObject PlayerPrefab;
     [SerializeField] private GameObject rejoinUI;
+    [SerializeField] private GameObject loseUI;
     private Vector2 randomPosition;
     private string roomCode;
     private GameObject player;
@@ -56,6 +57,11 @@ public class MultiplayerManager : MonoBehaviour
     {
         CreateAndJoinRoom.instance.LeaveRoom();
         SceneManager.LoadScene("Loading");
+    }
+
+    public void Lose()
+    {
+        loseUI.SetActive(true);
     }
 
 

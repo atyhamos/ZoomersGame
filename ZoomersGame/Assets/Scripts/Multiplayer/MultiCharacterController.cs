@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Events;
+using Photon.Pun;
 
 public class MultiCharacterController : MonoBehaviour
 {
@@ -9,8 +10,8 @@ public class MultiCharacterController : MonoBehaviour
 	[SerializeField] private Transform groundCheck;                         // A position marking where to check if the player is grounded.
 	[SerializeField] private Transform ceilingCheck;                            // A position marking where to check for ceilings
 	[SerializeField] private Transform frontCheck;                            // A position marking where to check for front of 
-	[SerializeField] private Collider2D crouchDisableCollider;              // A collider that will be disabled when crouching
-	[SerializeField] private Collider2D crouchEnableCollider;              // A collider that will be enabled when crouching
+	[SerializeField] private Collider2D standingCollider;              // A collider that will be disabled when crouching
+	[SerializeField] private Collider2D crouchCollider;              // A collider that will be enabled when crouching
 	[SerializeField] private LayerMask m_WhatIsGround;
 	[SerializeField] private LayerMask m_WhatIsWall;
 	[SerializeField] private Animator anim;
@@ -77,8 +78,20 @@ public class MultiCharacterController : MonoBehaviour
 			canDoubleJump = true;
 	}
 
+	[PunRPC]
+	private void DisableCollider()
+	{
+		standingCollider.enabled = false;
+		crouchCollider.enabled = true;
+	}
 
-	public void Move(float move, bool crouch, bool jump)
+	[PunRPC]
+	private void EnableCollider()
+    {
+		standingCollider.enabled = true;
+		crouchCollider.enabled = false;
+	}
+	public void Move(float move, bool crouch, bool jump, PhotonView view)
 	{
 
 		// SLIDING
@@ -91,6 +104,7 @@ public class MultiCharacterController : MonoBehaviour
 			// No ceiling. Sliding
 			else if (isSliding)
 			{
+				view.RPC("DisableCollider", RpcTarget.AllBuffered);
 				// still sliding
 				if (slideTimer < 0.3f)
 					slideTimer += Time.deltaTime;
@@ -98,10 +112,11 @@ public class MultiCharacterController : MonoBehaviour
 				// finished sliding
 				else
 				{
+					view.RPC("EnableCollider", RpcTarget.AllBuffered);
 					slideTimer = 0;
 					isSliding = false;
-					crouchDisableCollider.enabled = true;
-					crouchEnableCollider.enabled = false;
+					standingCollider.enabled = true;
+					crouchCollider.enabled = false;
 					OnSlideEvent.Invoke(false);
 				}
 			}
@@ -111,10 +126,11 @@ public class MultiCharacterController : MonoBehaviour
 		if (crouch && isGrounded)
 		{
 			// Disable one of the colliders when sliding
-			if (crouchDisableCollider != null)
+			if (standingCollider != null)
 			{
-				crouchEnableCollider.enabled = true;
-				crouchDisableCollider.enabled = false;
+				view.RPC("DisableCollider", RpcTarget.AllBuffered);
+				crouchCollider.enabled = true;
+				standingCollider.enabled = false;
 			}
 
 			// start the slide timer
@@ -139,10 +155,11 @@ public class MultiCharacterController : MonoBehaviour
 						slideTimer = 0.3f;
 					else
 					{
+						view.RPC("EnableCollider", RpcTarget.AllBuffered);
 						slideTimer = 0;
 						isSliding = false;
-						crouchDisableCollider.enabled = true;
-						crouchEnableCollider.enabled = false;
+						standingCollider.enabled = true;
+						crouchCollider.enabled = false;
 						OnSlideEvent.Invoke(false);
 					}
 				}
@@ -275,7 +292,7 @@ public class MultiCharacterController : MonoBehaviour
 			if (player.nextCheckpoint == collision.transform) // Correct checkpoint
             {
 				Debug.Log("Crossed correct checkpoint!");
-				player.UpdateCheckpoint(collision.gameObject.GetComponent<CheckpointManager>().Next());
+				player.UpdateCheckpoint(collision.gameObject.GetComponent<CheckpointManager>());
             }
         }
 	}
