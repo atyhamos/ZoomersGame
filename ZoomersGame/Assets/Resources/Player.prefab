@@ -3074,14 +3074,15 @@ MonoBehaviour:
   PlaceholderButtons: {fileID: 5254312606389740377}
   PlayerNameText: {fileID: 8257042216213247536}
   Sprite: {fileID: 8257042215642085569}
-  hasPowerUp: 0
   usingPowerUp: 0
   previousPowerUp: {fileID: 0}
   currentPowerUp: {fileID: 0}
+  moveLeft: 0
+  moveRight: 0
+  jump: 0
+  crouch: 0
   checkpointsCrossed: 0
-  orthSize: 0
-  previousCheckpoint: {fileID: 0}
-  nextCheckpoint: {fileID: 0}
+  currentCheckpoint: {fileID: 0}
   rank: 0
   wins: 0
   Manager: {fileID: 0}

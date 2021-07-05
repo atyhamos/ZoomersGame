@@ -267,32 +267,38 @@ public class MultiCharacterController : MonoBehaviour
 
 		if (collision.CompareTag("PowerUp"))
 		{
-			if (!player.hasPowerUp)
+			if (!player.HasPowerUp())
 			{
 				MultiPowerUp power = collision.gameObject.GetComponent<MultiPowerUp>();
 				power.Pickup(this, player);
 				player.currentPowerUp = power;
-				player.hasPowerUp = true;
 			}
 		}
 
 		if (collision.CompareTag("Random"))
 		{
-			if (!player.hasPowerUp)
+			if (!player.HasPowerUp())
 			{
 				MultiPowerUp power = collision.GetComponent<MultiRandomPowerUp>().GetRandomPower();
 				power.Pickup(this, player);
 				player.currentPowerUp = power;
-				player.hasPowerUp = true;
 			}
 		}
 
 		if (collision.CompareTag("Checkpoint"))
         {
-			if (player.nextCheckpoint == collision.GetComponent<Checkpoint>()) // Correct checkpoint
+			if (player.currentCheckpoint == null
+				&& collision.GetComponent<Checkpoint>() == GameObject.Find("Checkpoint 1").GetComponent<Checkpoint>())
+            {
+				Debug.Log("Crossed first checkpoint!");
+				player.currentCheckpoint = collision.GetComponent<Checkpoint>();
+				player.CrossCheckpoint(collision.GetComponent<Checkpoint>());
+				return;
+			}
+			else if (player.currentCheckpoint.Next() == collision.GetComponent<Checkpoint>()) // Correct checkpoint
             {
 				Debug.Log("Crossed correct checkpoint!");
-				player.previousCheckpoint = player.nextCheckpoint;
+				player.currentCheckpoint = player.currentCheckpoint.Next();
 				player.CrossCheckpoint(collision.GetComponent<Checkpoint>());
             }
         }

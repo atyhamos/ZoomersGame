@@ -18,13 +18,12 @@ public class MultiplayerController : MonoBehaviour
     public GameObject PlayerButtons, PlaceholderButtons;
     public Text PlayerNameText;
     public SpriteRenderer Sprite;
-    public bool hasPowerUp, usingPowerUp;
+    public bool usingPowerUp;
     public MultiPowerUp previousPowerUp, currentPowerUp;
-    private bool moveLeft, moveRight, jump, crouch;
+    public bool moveLeft, moveRight, jump, crouch;
     private int horizontalMove;
     public int checkpointsCrossed = 0;
-    public float orthSize;
-    public Checkpoint previousCheckpoint, nextCheckpoint;
+    public Checkpoint currentCheckpoint;
     public int rank = 0, wins = 0;
     public MultiplayerManager Manager;
     public bool isReady, isHost, isLoading, lostRound;
@@ -52,7 +51,7 @@ public class MultiplayerController : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        nextCheckpoint = GameObject.Find("Checkpoint 1").GetComponent<Checkpoint>();
+        currentCheckpoint = null;
         moveLeft = false;
         moveRight = false;
         crouch = false;
@@ -122,7 +121,7 @@ public class MultiplayerController : MonoBehaviour
 
     public void ConsumePower()
     {
-        if (hasPowerUp)
+        if (HasPowerUp())
         {
             if (usingPowerUp)
             {
@@ -140,6 +139,7 @@ public class MultiplayerController : MonoBehaviour
         moveRight = false;
         jump = false;
         crouch = false;
+        rb.velocity = Vector2.zero;
     }
 
     [PunRPC]
@@ -198,39 +198,43 @@ public class MultiplayerController : MonoBehaviour
     {
         wins++;
         Debug.Log("You now have " + wins + " wins");
-    //    Manager.StartCoroutine("Win");
+        Manager.StartCoroutine("Win");
     }
 
     public void WinRound()
     {
-        StopMoving();
         DisableButtons();
+        StopMoving();
         view.RPC("Win", RpcTarget.AllBuffered);
     }
 
     [PunRPC]
     private void Respawn(int racerId)
     {
-        StopMoving();
         isLoading = true;
-        rank = 0;
+        rank = 1;
         checkpointsCrossed = 0;
-        this.previousCheckpoint = Manager.leadPlayer.previousCheckpoint;
-        this.nextCheckpoint = previousCheckpoint.Next();
-        Manager.ResetRound();
-        lostRound = false;
         Manager.leadPlayer = Manager.racersArray[racerId];
+        this.currentCheckpoint = Manager.leadPlayer.currentCheckpoint;
+        Manager.ResetRound();
+        StopMoving();
+        lostRound = false;
         isLoading = false;
     }
 
+    public bool HasPowerUp()
+    {
+        return currentPowerUp != null;
+    }
 
     public void ResetRound(int racerId)
     {
 
-        if (Manager.racersArray[racerId].previousCheckpoint.flipSprite)
+        if (Manager.racersArray[racerId].currentCheckpoint.flipSprite)
             view.RPC("FlipTrue", RpcTarget.AllBuffered);
         else
             view.RPC("FlipFalse", RpcTarget.AllBuffered);
+
         view.RPC("Respawn", RpcTarget.AllBuffered, racerId);
     }
 
@@ -286,12 +290,12 @@ public class MultiplayerController : MonoBehaviour
             }
             if (Input.GetButtonDown("PowerUp"))
                 ConsumePower();
-            if (hasPowerUp)
+            if (HasPowerUp())
                 if (currentPowerUp.GetType().ToString() == "MultiCherryPowerUp")
                     CherryPowerButton.SetActive(true);
                 else
                     BoxPowerButton.SetActive(true);
-            else if (!hasPowerUp)
+            else if (!HasPowerUp())
             {
                 CherryPowerButton.SetActive(false);
                 BoxPowerButton.SetActive(false);
@@ -300,8 +304,7 @@ public class MultiplayerController : MonoBehaviour
             {
                 if (!lostRound && rank > 1) // Not leader and still in race
                 {
-                    LeaderCamera.SetActive(true);
-                    PlayerCamera.SetActive(false);
+                    view.RPC("OtherCameras", RpcTarget.AllBuffered);
                     if (MultiBoundsCheck.instance.WithinBounds(transform))
                     {
                         Debug.Log("Within bounds!");
@@ -317,28 +320,44 @@ public class MultiplayerController : MonoBehaviour
                 }
                 if (rank == 1) // Leader
                 {
-                    PlayerCamera.SetActive(true);
-                    MultiBoundsCheck.instance.UpdateSize(PlayerCamera.GetComponent<CinemachineVirtualCamera>(), orthSize);
+                    view.RPC("LeadCamera", RpcTarget.AllBuffered);
                 }
             }
         }
     }
 
-   // private void UpdateCheckpointRPC()
-   // {
-   //     Manager.
-   // }
-   //
-   // public void UpdateCheckpoint()
-   // {
-   //     view.RPC("UpdateCheckpointRPC", RpcTarget.AllBuffered);
-   // }
+    [PunRPC]
+    private void OtherCameras()
+    {
+        LeaderCamera.SetActive(true);
+        MultiBoundsCheck.instance.UpdateBounds();
+        MultiBoundsCheck.instance.UpdateSize(LeaderCamera.GetComponent<CinemachineVirtualCamera>(), Manager.leadPlayer.currentCheckpoint.orthographicSize);
+        PlayerCamera.SetActive(false);
+    }
+
+    [PunRPC]
+    private void LeadCamera()
+    {
+        PlayerCamera.SetActive(true);
+        MultiBoundsCheck.instance.UpdateBounds();
+        MultiBoundsCheck.instance.UpdateSize(PlayerCamera.GetComponent<CinemachineVirtualCamera>(), currentCheckpoint.orthographicSize);
+    }
 
     public void CrossCheckpoint(Checkpoint checkpoint)
     {
         Debug.Log("Updating next checkpoint...");
-        orthSize = checkpoint.orthographicSize;
-        nextCheckpoint = checkpoint.Next();
+        currentCheckpoint = checkpoint;
+        view.RPC("RankRacers", RpcTarget.AllBuffered);
+    }
+
+    public void UpdateLeadPlayer()
+    {
+        Manager.leadPlayer = Manager.racersArray[Manager.racersArray.Count - 1];
+    }
+
+    [PunRPC]
+    private void RankRacers()
+    {
         checkpointsCrossed++;
         Manager.RankRacers();
     }

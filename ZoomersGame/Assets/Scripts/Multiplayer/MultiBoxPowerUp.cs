@@ -13,7 +13,6 @@ public class MultiBoxPowerUp : MultiPowerUp
     {
         Debug.Log("Placed box!");
         SpawnBox();
-        player.hasPowerUp = false;
         player.usingPowerUp = false;
     }
 

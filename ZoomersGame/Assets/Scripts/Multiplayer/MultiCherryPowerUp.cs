@@ -13,7 +13,6 @@ public class MultiCherryPowerUp : MultiPowerUp
     public override void Consume()
     {
         Debug.Log("Consumed cherry! Boosting!");
-        player.hasPowerUp = false;
         player.usingPowerUp = true;
         co = StartCoroutine(SpeedUp());
     }

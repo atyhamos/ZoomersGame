@@ -50,6 +50,9 @@ MonoBehaviour:
   - FinishLoading
   - Loading
   - UpdateCheckpoint
+  - RankRacers
+  - LeadCamera
+  - OtherCameras
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

@@ -11,10 +11,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     public float minX, maxX, minY, maxY;
     [SerializeField] private Text PingText;
     [SerializeField] private GameObject PlayerPrefab;
-    [SerializeField] private GameObject rejoinUI;
-    [SerializeField] private GameObject loseUI;
-    [SerializeField] private GameObject startUI;
-    [SerializeField] private GameObject readyUI;
+    [SerializeField] private GameObject rejoinUI, loseUI, startUI, readyUI, winUI;
     [SerializeField] private Transform spawnLocation;
     [SerializeField] private Text playerCount;
     [SerializeField] private GameObject loadingUI;
@@ -91,7 +88,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
                     StartCoroutine(GoTask());
             }
         }
-        Debug.Log(AllLoaded());
+        //Debug.Log(AllLoaded());
 
 
     }
@@ -139,6 +136,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     {
         player.Load();
         player.transform.position = randomPosition;
+        player.StopMoving();
         player.HideAllButtons();
         Checkpoints.SetActive(false); // to prevent accidental crossing of checkpoints
         startUI.SetActive(false);
@@ -167,7 +165,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
             else
                 return false;
         }
-        Debug.Log("all ready!");
+        //Debug.Log("all ready!");
         return true;
     }
 
@@ -205,22 +203,20 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         }
     }
 
-    //public IEnumerator Win()
-    //{
-    //    Debug.Log("Win");
-    //    yield return new WaitForSeconds(1f);
-    //    leadPlayer = player;
-    //    respawnLocation = new Vector2(Random.Range(player.previousCheckpoint.transform.position.x - 1, player.previousCheckpoint.transform.position.x + 1),
-    //            player.previousCheckpoint.transform.position.y + 2);
-    //    player.ResetRound(player);
-    //}
+    public IEnumerator Win()
+    {
+        Debug.Log("Win");
+        winUI.SetActive(true);
+        yield return new WaitForSeconds(1f);
+    }
 
     public void ResetRound()
     {
-        respawnLocation = new Vector2(Random.Range(player.previousCheckpoint.transform.position.x - 1, player.previousCheckpoint.transform.position.x + 1),
-                player.previousCheckpoint.transform.position.y + 2);
+        respawnLocation = new Vector2(Random.Range(player.currentCheckpoint.transform.position.x - 1, player.currentCheckpoint.transform.position.x + 1),
+                player.currentCheckpoint.transform.position.y + 2);
         Checkpoints.SetActive(false);
         player.transform.position = respawnLocation;
+        winUI.SetActive(false);
         loseUI.SetActive(false);
         isRacing = false;
         Checkpoints.SetActive(true);
@@ -239,9 +235,11 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         racersArray.Sort((p1, p2) => p1.checkpointsCrossed.CompareTo(p2.checkpointsCrossed));
         Debug.Log(racersArray.Count);
         GameObject leaderCamera = racersArray[racersArray.Count - 1].PlayerCamera;
+        MultiplayerController leader = racersArray[racersArray.Count - 1];
         for (int i = 0; i < racersArray.Count; i++)
         {
             racersArray[i].rank = racersArray.Count - i;
+            racersArray[i].UpdateLeadPlayer();
             racersArray[i].LeaderCamera = leaderCamera;
             Debug.Log("Updated rank to " + i);
         }
