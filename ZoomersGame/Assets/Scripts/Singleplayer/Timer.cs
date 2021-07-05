@@ -40,7 +40,7 @@ public class Timer : MonoBehaviour
             DisableButtons();
             countdownUntil -= 1 * Time.deltaTime;
             countdownText.text = "Race is starting in " + countdownUntil.ToString("0");
-            if (countdownUntil <= 0)
+            if (countdownUntil <= 0.5)
             {
                 EnableButtons();
                 timerText.gameObject.SetActive(true);

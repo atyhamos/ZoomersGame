@@ -43,6 +43,13 @@ MonoBehaviour:
   - SpriteJump
   - DisableCollider
   - EnableCollider
+  - Ready
+  - StartRound
+  - Respawn
+  - Win
+  - FinishLoading
+  - Loading
+  - UpdateCheckpoint
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

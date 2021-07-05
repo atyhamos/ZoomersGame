@@ -289,10 +289,11 @@ public class MultiCharacterController : MonoBehaviour
 
 		if (collision.CompareTag("Checkpoint"))
         {
-			if (player.nextCheckpoint == collision.transform) // Correct checkpoint
+			if (player.nextCheckpoint == collision.GetComponent<Checkpoint>()) // Correct checkpoint
             {
 				Debug.Log("Crossed correct checkpoint!");
-				player.UpdateCheckpoint(collision.gameObject.GetComponent<CheckpointManager>());
+				player.previousCheckpoint = player.nextCheckpoint;
+				player.CrossCheckpoint(collision.GetComponent<Checkpoint>());
             }
         }
 	}
