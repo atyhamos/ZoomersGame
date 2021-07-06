@@ -5,12 +5,14 @@ using UnityEngine.UI;
 using Photon.Pun;
 using Photon.Realtime;
 using Cinemachine;
+using UnityEngine.EventSystems;
 public class MultiplayerController : MonoBehaviour
 {
     [SerializeField] Animator animator;
     [SerializeField] MultiCharacterController controller;
     [SerializeField] private GameObject CherryPowerButton;
     [SerializeField] private GameObject BoxPowerButton;
+    public GameObject LeftRightButtons;
     private Rigidbody2D rb;
     private PhotonView view;
     public GameObject PlayerCamera;
@@ -69,16 +71,28 @@ public class MultiplayerController : MonoBehaviour
             }
         }
     }
-    public void MoveLeft()
+    public void MoveLeftDown()
     {
         if (view.IsMine)
-            moveLeft = !moveLeft;
+            moveLeft = true;
     }
 
-    public void MoveRight()
+    public void MoveRightDown()
     {
         if (view.IsMine)
-            moveRight = !moveRight;
+            moveRight = true;
+    }
+
+    public void MoveLeftUp()
+    {
+        if (view.IsMine)
+            moveLeft = false;
+    }
+
+    public void MoveRightUp()
+    {
+        if (view.IsMine)
+            moveRight = false;
     }
     public void Jump()
     {
@@ -96,6 +110,16 @@ public class MultiplayerController : MonoBehaviour
     {
         if (view.IsMine)
         {
+            var pointers = LeftRightButtons.GetComponentsInChildren<IPointerDownHandler>();
+            if (pointers != null)
+            {
+                foreach (var p in pointers)
+                {
+                    var mb = p as MonoBehaviour;
+                    if (mb != null)
+                        mb.enabled = false;
+                }
+            }
             PlayerButtons.SetActive(false);
             PlaceholderButtons.SetActive(true);
         }
@@ -104,6 +128,16 @@ public class MultiplayerController : MonoBehaviour
     {
         if (view.IsMine)
         {
+            var pointers = LeftRightButtons.GetComponentsInChildren<IPointerDownHandler>(true);
+            if (pointers != null)
+            {
+                foreach (var p in pointers)
+                {
+                    var mb = p as MonoBehaviour;
+                    if (mb != null)
+                        mb.enabled = true;
+                }
+            }
             PlayerButtons.SetActive(true);
             PlaceholderButtons.SetActive(false);
         }
@@ -113,6 +147,16 @@ public class MultiplayerController : MonoBehaviour
     {
         if (view.IsMine)
         {
+            var pointers = LeftRightButtons.GetComponentsInChildren<IPointerDownHandler>();
+            if (pointers != null)
+            {
+                foreach (var p in pointers)
+                {
+                    var mb = p as MonoBehaviour;
+                    if (mb != null)
+                        mb.enabled = false;
+                }
+            }
             PlayerButtons.SetActive(false);
             PlaceholderButtons.SetActive(false);
         }
@@ -139,7 +183,7 @@ public class MultiplayerController : MonoBehaviour
         moveRight = false;
         jump = false;
         crouch = false;
-        rb.velocity = Vector2.zero;
+        rb.velocity = new Vector2(0, 0);
     }
 
     [PunRPC]
@@ -196,15 +240,19 @@ public class MultiplayerController : MonoBehaviour
     [PunRPC]
     private void Win()
     {
+        if (view.IsMine)
+            Manager.StartCoroutine("ShowWin");
         wins++;
+        Manager.UpdatePlayerScores();
+        Manager.isRacing = false;
         Debug.Log("You now have " + wins + " wins");
-        Manager.StartCoroutine("Win");
     }
 
     public void WinRound()
     {
-        DisableButtons();
         StopMoving();
+        isLoading = true;
+        DisableButtons();
         view.RPC("Win", RpcTarget.AllBuffered);
     }
 
@@ -343,10 +391,14 @@ public class MultiplayerController : MonoBehaviour
         MultiBoundsCheck.instance.UpdateSize(PlayerCamera.GetComponent<CinemachineVirtualCamera>(), currentCheckpoint.orthographicSize);
     }
 
-    public void CrossCheckpoint(Checkpoint checkpoint)
+    public void CrossCheckpoint(Checkpoint checkpoint, bool correct)
     {
         Debug.Log("Updating next checkpoint...");
         currentCheckpoint = checkpoint;
+        if (correct)
+            checkpointsCrossed++; 
+        else
+            checkpointsCrossed--;
         view.RPC("RankRacers", RpcTarget.AllBuffered);
     }
 
@@ -358,10 +410,8 @@ public class MultiplayerController : MonoBehaviour
     [PunRPC]
     private void RankRacers()
     {
-        checkpointsCrossed++;
         Manager.RankRacers();
     }
-
     public void OnLanding()
     {
         animator.SetBool("IsFalling", false);

@@ -37,7 +37,7 @@ public class MultiCherryPowerUp : MultiPowerUp
     public override void Cancel()
     {
         StopCoroutine(co);
-        controller.maxSpeed /= 1.5f;
+        controller.maxSpeed /= speedBoost;
         player.usingPowerUp = false;
     }
 

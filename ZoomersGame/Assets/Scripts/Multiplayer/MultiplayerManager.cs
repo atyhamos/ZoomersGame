@@ -13,7 +13,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     [SerializeField] private GameObject PlayerPrefab;
     [SerializeField] private GameObject rejoinUI, loseUI, startUI, readyUI, winUI;
     [SerializeField] private Transform spawnLocation;
-    [SerializeField] private Text playerCount;
+    [SerializeField] private Text playerCount, players;
     [SerializeField] private GameObject loadingUI;
     [SerializeField] private GameObject playerNumUI;
     [SerializeField] private Text countdownText;
@@ -25,7 +25,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     private string roomCode;
     private MultiplayerController player;
     private int pingUpdate = 1; // 1 second
-    public List<MultiplayerController> racersArray;
+    public List<MultiplayerController> racersArray, racersScores;
     public static MultiplayerManager instance;
     public bool isRacing;
     private float countdownUntil = 3f;
@@ -189,13 +189,14 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     {
         Debug.Log("lose");
         loseUI.SetActive(true);
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.5f); // need time to update the loss
         int racerId = LastRacerLeft();
         if (racerId != -1)
         {
             // 1 racer 
             leadPlayer = racersArray[racerId];
             leadPlayer.WinRound();
+            yield return new WaitForSeconds(0.5f);
             foreach (MultiplayerController player in racersArray)
             {
                 player.ResetRound(racerId);
@@ -203,11 +204,13 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         }
     }
 
-    public IEnumerator Win()
+
+
+    public IEnumerator ShowWin()
     {
-        Debug.Log("Win");
         winUI.SetActive(true);
         yield return new WaitForSeconds(1f);
+        winUI.SetActive(false);
     }
 
     public void ResetRound()
@@ -216,7 +219,6 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
                 player.currentCheckpoint.transform.position.y + 2);
         Checkpoints.SetActive(false);
         player.transform.position = respawnLocation;
-        winUI.SetActive(false);
         loseUI.SetActive(false);
         isRacing = false;
         Checkpoints.SetActive(true);
@@ -268,10 +270,12 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     public void AddPlayer(MultiplayerController player)
     {
         racersArray.Add(player);
+        racersScores.Add(player);
         playerList = PhotonNetwork.PlayerList;
         Debug.Log("Added player");
         Debug.Log(PlayerCount());
         playerCount.text = $"Number of players: {PlayerCount()}";
+        players.text += $"{player.PlayerNameText.text} ({player.wins})\n";
     }
 
     public int PlayerCount()
@@ -284,12 +288,16 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     public void UpdateRacers()
     {
         List<MultiplayerController> tempRacersArray = new List<MultiplayerController>();
+        racersScores = new List<MultiplayerController>();
         foreach (MultiplayerController item in racersArray)
         {
             if (item == null)
                 continue;
             else
+            {
                 tempRacersArray.Add(item);
+                racersScores.Add(item);
+            }    
         }
         racersArray = tempRacersArray;
     }
@@ -306,5 +314,16 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     {
         yield return new WaitForSeconds(1f);
         UpdateRacers();
+        UpdatePlayerScores();
+    }
+
+    public void UpdatePlayerScores()
+    {
+        players.text = "Players: (wins)\n";
+        racersScores.Sort((p1, p2) => p1.wins.CompareTo(p2.wins));
+        for (int i = racersScores.Count - 1; i >= 0; i--)
+        {
+            players.text += $"{racersScores[i].PlayerNameText.text} ({racersScores[i].wins})\n";
+        }
     }
 }
