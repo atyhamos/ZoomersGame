@@ -254,6 +254,12 @@ public class MultiCharacterController : MonoBehaviour
 			anim.SetBool("IsFalling", false);
 			rb.velocity = new Vector2(rb.velocity.x, 100f);
         }
+		if (collision.gameObject.tag == "PowerUp")
+		{
+			Rigidbody2D rb = collision.gameObject.GetComponent<Rigidbody2D>();
+			Debug.Log($"Mass: {rb.mass}\nLinear Drag: {rb.drag}\nAngular Drag: {rb.angularDrag}\nGravity: {rb.gravityScale}");
+		}
+
 	}
 
 	private void OnTriggerEnter2D(Collider2D collision)

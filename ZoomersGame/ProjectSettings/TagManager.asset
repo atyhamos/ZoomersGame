@@ -12,6 +12,7 @@ TagManager:
   - TutorialPanel
   - Checkpoint
   - LoadingArea
+  - Box
   layers:
   - Default
   - TransparentFX

@@ -53,6 +53,15 @@ MonoBehaviour:
   - RankRacers
   - LeadCamera
   - OtherCameras
+  - EndGame
+  - StartRaceRPC
+  - BecomeHostRPC
+  - SubmitRules
+  - UpdateRulesRPC
+  - GetMasterDataRPC
+  - EnterLobbyRPC
+  - ChangeBoxMass
+  - TransferOwner
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

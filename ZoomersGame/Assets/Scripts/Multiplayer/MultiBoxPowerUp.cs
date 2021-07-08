@@ -7,6 +7,7 @@ public class MultiBoxPowerUp : MultiPowerUp
 {
 
     [SerializeField] private GameObject prefabBox;
+    private Rigidbody2D boxRb;
     private Transform boxPlacement;
 
     public override void Consume()
@@ -21,7 +22,6 @@ public class MultiBoxPowerUp : MultiPowerUp
         this.controller = controller;
         this.player = player;
         Debug.Log("Picked up box!");
-        //  Destroy(gameObject);
     }
     public override void Cancel()
     {
@@ -33,6 +33,7 @@ public class MultiBoxPowerUp : MultiPowerUp
         GameObject box = PhotonNetwork.Instantiate(prefabBox.name, controller.trapPlacement.position, Quaternion.identity);
         StartCoroutine(StartDespawnBox(box));
     }
+
 
     private IEnumerator StartDespawnBox(GameObject box)
     {

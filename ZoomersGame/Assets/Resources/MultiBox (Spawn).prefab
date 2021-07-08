@@ -14,7 +14,8 @@ GameObject:
   - component: {fileID: 744330557368885362}
   - component: {fileID: 436983933062591047}
   - component: {fileID: -452150293191202247}
-  m_Layer: 0
+  - component: {fileID: 9036368262296011987}
+  m_Layer: 8
   m_Name: MultiBox (Spawn)
   m_TagString: PowerUp
   m_Icon: {fileID: 0}
@@ -128,11 +129,11 @@ Rigidbody2D:
   m_LinearDrag: 1
   m_AngularDrag: 0.05
   m_GravityScale: 8
-  m_Material: {fileID: 6200000, guid: d60dfc0380ba1fc40aaddaa7d816d276, type: 2}
+  m_Material: {fileID: 6200000, guid: eaac1345a5843464ea5d7825edacb78d, type: 2}
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 4
 --- !u!114 &436983933062591047
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -149,7 +150,7 @@ MonoBehaviour:
   Group: 0
   prefixField: -1
   Synchronization: 3
-  OwnershipTransfer: 0
+  OwnershipTransfer: 1
   observableSearch: 2
   ObservedComponents:
   - {fileID: -452150293191202247}
@@ -186,6 +187,18 @@ MonoBehaviour:
     InterpolateLerpSpeed: 5
   m_ScaleModel:
     SynchronizeEnabled: 0
-    InterpolateOption: 0
+    InterpolateOption: 2
     InterpolateMoveTowardsSpeed: 1
     InterpolateLerpSpeed: 0
+--- !u!114 &9036368262296011987
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4044447734920377587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8869e280e72c58541a76414867ceb3bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

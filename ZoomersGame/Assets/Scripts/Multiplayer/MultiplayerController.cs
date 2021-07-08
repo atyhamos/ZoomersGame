@@ -32,12 +32,13 @@ public class MultiplayerController : MonoBehaviour
 
     private void Awake()
     {
+        Manager = GameObject.Find("MultiplayerManager").GetComponent<MultiplayerManager>();
+        rb = GetComponent<Rigidbody2D>();
         view = GetComponent<PhotonView>();
         if (view.IsMine)
         {
-            isHost = PhotonNetwork.IsMasterClient;
-            PlayerButtons.SetActive(true);
-            PlayerCamera.SetActive(true);
+            if (PhotonNetwork.IsMasterClient)
+                BecomeHost();
             PlayerNameText.text = PhotonNetwork.NickName;
             PlayerNameText.color = Color.cyan;
         }
@@ -46,19 +47,15 @@ public class MultiplayerController : MonoBehaviour
             PlayerNameText.text = view.Owner.NickName;
             PlayerNameText.color = Color.white;
         }
-        Manager = GameObject.Find("MultiplayerManager").GetComponent<MultiplayerManager>();
         Manager.AddPlayer(this);
     }
 
     void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
-        currentCheckpoint = null;
-        moveLeft = false;
-        moveRight = false;
-        crouch = false;
         if (view.IsMine)
         {
+            EnableButtons();
+            PlayerCamera.SetActive(true);
             if (isHost)
             {
                 isReady = true;
@@ -66,11 +63,37 @@ public class MultiplayerController : MonoBehaviour
             }
             else
             {
+                Debug.Log("Setting ready to false!");
                 isReady = false;
                 Manager.LoadReady();
             }
         }
+        currentCheckpoint = null;
+        moveLeft = false;
+        moveRight = false;
+        crouch = false;
+        wins = 0;
+        checkpointsCrossed = 0;
+        rank = 0;
+        LeaderCamera = null;
+        lostRound = false;
+        isLoading = false;
+        currentPowerUp = null;
     }
+
+    [PunRPC]
+    private void BecomeHostRPC()
+    {
+        isHost = true;
+    }
+
+    public void BecomeHost()
+    {
+        view.RPC("BecomeHostRPC", RpcTarget.AllBuffered);
+        if (Manager.InLobby())
+            Manager.LoadStart();
+    }
+
     public void MoveLeftDown()
     {
         if (view.IsMine)
@@ -105,6 +128,29 @@ public class MultiplayerController : MonoBehaviour
             if (moveLeft || moveRight)
                 crouch = true;
     }
+
+    [PunRPC]
+    private void EnterLobbyRPC()
+    {
+        Start();
+    }
+    public void EnterLobby()
+    {
+        view.RPC("EnterLobbyRPC", RpcTarget.AllBuffered);
+    }
+
+    [PunRPC]
+    private void UpdateRulesRPC(int winsNeeded)
+    {
+        Manager.UpdateRules(winsNeeded);
+    }
+
+    public void UpdateRules(int winsNeeded)
+    {
+        view.RPC("UpdateRulesRPC", RpcTarget.AllBuffered, winsNeeded);
+    }
+
+
 
     public void DisableButtons()
     {
@@ -183,7 +229,7 @@ public class MultiplayerController : MonoBehaviour
         moveRight = false;
         jump = false;
         crouch = false;
-        rb.velocity = new Vector2(0, 0);
+        rb.velocity = new Vector2(0, rb.velocity.y);
     }
 
     [PunRPC]
@@ -228,6 +274,8 @@ public class MultiplayerController : MonoBehaviour
     [PunRPC]
     private void StartRound()
     {
+        if (!isHost)
+            isReady = false;
         Manager.StartCoroutine("StartTask");
         view.RPC("FlipFalse", RpcTarget.AllBuffered);
     }
@@ -240,18 +288,15 @@ public class MultiplayerController : MonoBehaviour
     [PunRPC]
     private void Win()
     {
-        if (view.IsMine)
-            Manager.StartCoroutine("ShowWin");
         wins++;
-        Manager.UpdatePlayerScores();
-        Manager.isRacing = false;
-        Debug.Log("You now have " + wins + " wins");
+        Manager.UpdatePlayerScores(); // this is where checking if the match ends
+        if (view.IsMine && wins < Manager.winsNeeded)
+            Manager.StartCoroutine("ShowWin");
     }
 
     public void WinRound()
     {
         StopMoving();
-        isLoading = true;
         DisableButtons();
         view.RPC("Win", RpcTarget.AllBuffered);
     }
@@ -259,7 +304,6 @@ public class MultiplayerController : MonoBehaviour
     [PunRPC]
     private void Respawn(int racerId)
     {
-        isLoading = true;
         rank = 1;
         checkpointsCrossed = 0;
         Manager.leadPlayer = Manager.racersArray[racerId];
@@ -267,7 +311,19 @@ public class MultiplayerController : MonoBehaviour
         Manager.ResetRound();
         StopMoving();
         lostRound = false;
-        isLoading = false;
+    }
+
+    [PunRPC]
+    private void EndGame(string winnerName)
+    {
+        Manager.winnerName = winnerName;
+        Manager.StartCoroutine("ShowWinner");
+        isLoading = true;
+    }
+
+    public void ShowWinner(string winnerName)
+    {
+        view.RPC("EndGame", RpcTarget.AllBuffered, winnerName);
     }
 
     public bool HasPowerUp()
@@ -284,6 +340,21 @@ public class MultiplayerController : MonoBehaviour
             view.RPC("FlipFalse", RpcTarget.AllBuffered);
 
         view.RPC("Respawn", RpcTarget.AllBuffered, racerId);
+    }
+
+    [PunRPC]
+    private void GetMasterDataRPC()
+    {
+        Manager.UpdatePlayerScores();
+        UpdateRules(Manager.winsNeeded);
+    }
+
+    
+
+    public void GetMasterData()
+    {
+        Debug.Log("Getting data from Master Client");
+        view.RPC("GetMasterDataRPC", RpcTarget.MasterClient);
     }
 
     private void Update()
@@ -371,6 +442,11 @@ public class MultiplayerController : MonoBehaviour
                     view.RPC("LeadCamera", RpcTarget.AllBuffered);
                 }
             }
+            if (!isHost && PhotonNetwork.IsMasterClient)
+            {
+                Debug.Log("Becoming host...");
+                BecomeHost();
+            }
         }
     }
 
@@ -390,6 +466,19 @@ public class MultiplayerController : MonoBehaviour
         MultiBoundsCheck.instance.UpdateBounds();
         MultiBoundsCheck.instance.UpdateSize(PlayerCamera.GetComponent<CinemachineVirtualCamera>(), currentCheckpoint.orthographicSize);
     }
+
+    [PunRPC]
+    private void StartRaceRPC()
+    {
+        Manager.isRacing = false;
+    }
+
+    public void StartRace()
+    {
+        view.RPC("StartRaceRPC", RpcTarget.AllBuffered);
+    }
+
+
 
     public void CrossCheckpoint(Checkpoint checkpoint, bool correct)
     {
