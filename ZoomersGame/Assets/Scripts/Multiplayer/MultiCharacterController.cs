@@ -1,16 +1,17 @@
 using UnityEngine;
 using UnityEngine.Events;
+using Photon.Pun;
 
 public class MultiCharacterController : MonoBehaviour
 {
-	[SerializeField] private float maxSpeed = 400f;
+	public float maxSpeed = 400f;
 	[SerializeField] private float jumpForce = 400f;                            // Amount of force added when the player jumps.
 	[Range(0, 1)] [SerializeField] private float slideSpeed = .36f;         // Amount of maxSpeed applied to crouching movement. 1 = 100%
 	[SerializeField] private Transform groundCheck;                         // A position marking where to check if the player is grounded.
 	[SerializeField] private Transform ceilingCheck;                            // A position marking where to check for ceilings
 	[SerializeField] private Transform frontCheck;                            // A position marking where to check for front of 
-	[SerializeField] private Collider2D crouchDisableCollider;              // A collider that will be disabled when crouching
-	[SerializeField] private Collider2D crouchEnableCollider;              // A collider that will be enabled when crouching
+	[SerializeField] private Collider2D standingCollider;              // A collider that will be disabled when crouching
+	[SerializeField] private Collider2D crouchCollider;              // A collider that will be enabled when crouching
 	[SerializeField] private LayerMask m_WhatIsGround;
 	[SerializeField] private LayerMask m_WhatIsWall;
 	[SerializeField] private Animator anim;
@@ -30,6 +31,7 @@ public class MultiCharacterController : MonoBehaviour
 	public float timeZeroToMaxSpeed = 1f;
 	float accelRatePerSec;
 	float forwardVelocity;
+	public Transform trapPlacement;
 
 	[System.Serializable]
 	public class BoolEvent : UnityEvent<bool> { }
@@ -76,8 +78,20 @@ public class MultiCharacterController : MonoBehaviour
 			canDoubleJump = true;
 	}
 
+	[PunRPC]
+	private void DisableCollider()
+	{
+		standingCollider.enabled = false;
+		crouchCollider.enabled = true;
+	}
 
-	public void Move(float move, bool crouch, bool jump)
+	[PunRPC]
+	private void EnableCollider()
+    {
+		standingCollider.enabled = true;
+		crouchCollider.enabled = false;
+	}
+	public void Move(float move, bool crouch, bool jump, PhotonView view)
 	{
 
 		// SLIDING
@@ -90,6 +104,7 @@ public class MultiCharacterController : MonoBehaviour
 			// No ceiling. Sliding
 			else if (isSliding)
 			{
+				view.RPC("DisableCollider", RpcTarget.AllBuffered);
 				// still sliding
 				if (slideTimer < 0.3f)
 					slideTimer += Time.deltaTime;
@@ -97,10 +112,11 @@ public class MultiCharacterController : MonoBehaviour
 				// finished sliding
 				else
 				{
+					view.RPC("EnableCollider", RpcTarget.AllBuffered);
 					slideTimer = 0;
 					isSliding = false;
-					crouchDisableCollider.enabled = true;
-					crouchEnableCollider.enabled = false;
+					standingCollider.enabled = true;
+					crouchCollider.enabled = false;
 					OnSlideEvent.Invoke(false);
 				}
 			}
@@ -110,10 +126,11 @@ public class MultiCharacterController : MonoBehaviour
 		if (crouch && isGrounded)
 		{
 			// Disable one of the colliders when sliding
-			if (crouchDisableCollider != null)
+			if (standingCollider != null)
 			{
-				crouchEnableCollider.enabled = true;
-				crouchDisableCollider.enabled = false;
+				view.RPC("DisableCollider", RpcTarget.AllBuffered);
+				crouchCollider.enabled = true;
+				standingCollider.enabled = false;
 			}
 
 			// start the slide timer
@@ -138,10 +155,11 @@ public class MultiCharacterController : MonoBehaviour
 						slideTimer = 0.3f;
 					else
 					{
+						view.RPC("EnableCollider", RpcTarget.AllBuffered);
 						slideTimer = 0;
 						isSliding = false;
-						crouchDisableCollider.enabled = true;
-						crouchEnableCollider.enabled = false;
+						standingCollider.enabled = true;
+						crouchCollider.enabled = false;
 						OnSlideEvent.Invoke(false);
 					}
 				}
@@ -219,9 +237,14 @@ public class MultiCharacterController : MonoBehaviour
 		// Switch the way the player is labelled as facing.
 		m_FacingRight = !m_FacingRight;
 		
-		Vector3 frontCheckPosition = transform.GetChild(5).localPosition;
+		// Flip the Front check position
+		Vector3 frontCheckPosition = frontCheck.localPosition;
 		frontCheckPosition.x *= -1;
-		transform.GetChild(5).localPosition = frontCheckPosition;
+		frontCheck.localPosition = frontCheckPosition;
+
+		Vector3 trapCheckPlacement = trapPlacement.localPosition;
+		trapCheckPlacement.x *= -1;
+		trapPlacement.localPosition = trapCheckPlacement;
 	}
 	private void OnCollisionEnter2D(Collision2D collision)
 	{
@@ -231,5 +254,67 @@ public class MultiCharacterController : MonoBehaviour
 			anim.SetBool("IsFalling", false);
 			rb.velocity = new Vector2(rb.velocity.x, 100f);
         }
+		if (collision.gameObject.tag == "PowerUp")
+		{
+			Rigidbody2D rb = collision.gameObject.GetComponent<Rigidbody2D>();
+			Debug.Log($"Mass: {rb.mass}\nLinear Drag: {rb.drag}\nAngular Drag: {rb.angularDrag}\nGravity: {rb.gravityScale}");
+		}
+
+	}
+
+	private void OnTriggerEnter2D(Collider2D collision)
+	{
+		MultiplayerController player = GetComponent<MultiplayerController>();
+		if (collision.CompareTag("Finish"))
+		{
+			player.StopMoving();
+			GetComponent<Timer>().Finish();
+		}
+
+		if (collision.CompareTag("PowerUp"))
+		{
+			if (!player.HasPowerUp())
+			{
+				MultiPowerUp power = collision.gameObject.GetComponent<MultiPowerUp>();
+				power.Pickup(this, player);
+				player.currentPowerUp = power;
+			}
+		}
+
+		if (collision.CompareTag("Random"))
+		{
+			if (!player.HasPowerUp())
+			{
+				MultiPowerUp power = collision.GetComponent<MultiRandomPowerUp>().GetRandomPower();
+				power.Pickup(this, player);
+				player.currentPowerUp = power;
+			}
+		}
+
+		if (collision.CompareTag("Checkpoint"))
+        {
+			if (player.currentCheckpoint == null
+				&& collision.GetComponent<Checkpoint>() == GameObject.Find("Checkpoint 1").GetComponent<Checkpoint>())
+            {
+				Debug.Log("Crossed first checkpoint!");
+				player.currentCheckpoint = collision.GetComponent<Checkpoint>();
+				player.CrossCheckpoint(player.currentCheckpoint, true);
+				return;
+			}
+			else if (player.currentCheckpoint.Next() == collision.GetComponent<Checkpoint>()) // Correct checkpoint
+            {
+				Debug.Log("Crossed correct checkpoint!");
+				player.currentCheckpoint = player.currentCheckpoint.Next();
+				player.CrossCheckpoint(player.currentCheckpoint, true);
+				return;
+            }
+			else if (player.currentCheckpoint.Previous() == collision.GetComponent<Checkpoint>()) // Backward checkpoint
+			{
+				Debug.Log("You're going backwards! (Crossed a previous checkpoint)");
+				player.currentCheckpoint = player.currentCheckpoint.Previous();
+				player.CrossCheckpoint(player.currentCheckpoint, false);
+				return;
+			}
+		}
 	}
 }

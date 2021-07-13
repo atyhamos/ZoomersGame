@@ -10,6 +10,9 @@ TagManager:
   - PowerUp
   - Random
   - TutorialPanel
+  - Checkpoint
+  - LoadingArea
+  - Box
   layers:
   - Default
   - TransparentFX

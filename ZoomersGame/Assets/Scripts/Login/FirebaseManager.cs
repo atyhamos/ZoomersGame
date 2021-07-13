@@ -27,6 +27,8 @@ public class FirebaseManager : MonoBehaviour
     [SerializeField] private TMP_InputField registerPassword;
     [SerializeField] private TMP_InputField registerConfirmPassword;
     [SerializeField] private TMP_Text registerOutputText;
+    private bool usernameChecked = false;
+    private bool usernameInUse = false;
     [Space(5f)]
 
     [Header("Reset Password References")]
@@ -197,75 +199,84 @@ public class FirebaseManager : MonoBehaviour
     {
         if (_username == "")
             registerOutputText.text = "Please enter a username";
-        else if (_password != _confirmPassword)
-            registerOutputText.text = "Passwords do not match";
+        else if (_username.Length > 15)
+            registerOutputText.text = "Username cannot exceed 15 characters";
         else
         {
-            var registerTask = auth.CreateUserWithEmailAndPasswordAsync(_email, _password);
-             
-            yield return new WaitUntil(predicate: () => registerTask.IsCompleted);
-
-            if (registerTask.Exception != null)
-            {
-                FirebaseException firebaseException = (FirebaseException)registerTask.Exception.GetBaseException();
-                AuthError error = (AuthError)firebaseException.ErrorCode;
-                string output = "Unknown error, please try again.";
-
-                switch (error)
-                {
-                    case AuthError.MissingEmail:
-                        output = "Please enter your email";
-                        break;
-                    case AuthError.MissingPassword:
-                        output = "Please enter your password";
-                        break;
-                    case AuthError.InvalidEmail:
-                        output = "Invalid email";
-                        break;
-                    case AuthError.EmailAlreadyInUse:
-                        output = "Email already in use";
-                        break;
-                    case AuthError.WrongPassword:
-                        output = "Wrong password";
-                        break;
-                    case AuthError.WeakPassword:
-                        output = "Weak password";
-                        break;
-                }
-                registerOutputText.text = output;
-            }
+            StartCoroutine(CheckUsername(_username));
+            yield return new WaitUntil(predicate: () => usernameChecked);
+            if (usernameInUse)
+                registerOutputText.text = "Username is already in use";
+            else if (_password != _confirmPassword)
+                registerOutputText.text = "Passwords do not match";
             else
             {
-                UserProfile profile = new UserProfile
-                {
-                    DisplayName = _username,
-                };
-                var defaultUserTask = user.UpdateUserProfileAsync(profile);
+                var registerTask = auth.CreateUserWithEmailAndPasswordAsync(_email, _password);
 
-                yield return new WaitUntil(predicate: () => defaultUserTask.IsCompleted);
-                if (defaultUserTask.Exception != null)
+                yield return new WaitUntil(predicate: () => registerTask.IsCompleted);
+
+                if (registerTask.Exception != null)
                 {
-                    user.DeleteAsync();
-                    FirebaseException firebaseException = (FirebaseException)defaultUserTask.Exception.GetBaseException();
+                    FirebaseException firebaseException = (FirebaseException)registerTask.Exception.GetBaseException();
                     AuthError error = (AuthError)firebaseException.ErrorCode;
                     string output = "Unknown error, please try again.";
 
                     switch (error)
                     {
-                        case AuthError.Cancelled:
-                            output = "Update user cancelled";
+                        case AuthError.MissingEmail:
+                            output = "Please enter your email";
                             break;
-                        case AuthError.SessionExpired:
-                            output = "Session Expired";
+                        case AuthError.MissingPassword:
+                            output = "Please enter your password";
+                            break;
+                        case AuthError.InvalidEmail:
+                            output = "Invalid email";
+                            break;
+                        case AuthError.EmailAlreadyInUse:
+                            output = "Email already in use";
+                            break;
+                        case AuthError.WrongPassword:
+                            output = "Wrong password";
+                            break;
+                        case AuthError.WeakPassword:
+                            output = "Weak password";
                             break;
                     }
                     registerOutputText.text = output;
                 }
                 else
                 {
-                    Debug.Log($"Firebase User Created Successfully: {user.DisplayName} ({user.UserId})");
-                    StartCoroutine(SendVerificationEmail());
-                    StartCoroutine(UpdateUserDatabase(_username));
+                    UserProfile profile = new UserProfile
+                    {
+                        DisplayName = _username,
+                    };
+                    var defaultUserTask = user.UpdateUserProfileAsync(profile);
+
+                    yield return new WaitUntil(predicate: () => defaultUserTask.IsCompleted);
+                    if (defaultUserTask.Exception != null)
+                    {
+                        user.DeleteAsync();
+                        FirebaseException firebaseException = (FirebaseException)defaultUserTask.Exception.GetBaseException();
+                        AuthError error = (AuthError)firebaseException.ErrorCode;
+                        string output = "Unknown error, please try again.";
+
+                        switch (error)
+                        {
+                            case AuthError.Cancelled:
+                                output = "Update user cancelled";
+                                break;
+                            case AuthError.SessionExpired:
+                                output = "Session Expired";
+                                break;
+                        }
+                        registerOutputText.text = output;
+                    }
+                    else
+                    {
+                        Debug.Log($"Firebase User Created Successfully: {user.DisplayName} ({user.UserId})");
+                        StartCoroutine(SendVerificationEmail());
+                        StartCoroutine(UpdateUserDatabase(_username));
+                    }
                 }
             }
         }
@@ -362,6 +373,14 @@ public class FirebaseManager : MonoBehaviour
         {
             Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
         }
+
+        DBTask = DBreference.Child("users").Child(user.UserId).Child("in match").SetValueAsync(false);
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
     }
 
     private IEnumerator UpdateBestTime(float _raw, string _formatted)
@@ -380,5 +399,35 @@ public class FirebaseManager : MonoBehaviour
             Debug.LogWarning(message: $"Failed to register task with {DBTaskFormat.Exception}");
         }
         Debug.Log($"Formatted time updated to {_formatted}");
+    }
+
+
+    private IEnumerator CheckUsername(string _username)
+    {
+        var DBTask = DBreference.Child("users").OrderByChild("username").GetValueAsync();
+
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        else
+        {
+            DataSnapshot snapshot = DBTask.Result;
+            foreach (DataSnapshot childSnapshot in snapshot.Children)
+            {
+                if (_username == childSnapshot.Child("username").GetValue(false).ToString())
+                {
+                    usernameChecked = true;
+                    usernameInUse = true;
+                    yield return null;
+                }
+                else
+                    continue;
+            }
+            usernameChecked = true;
+            usernameInUse = false;
+        }
     }
 }

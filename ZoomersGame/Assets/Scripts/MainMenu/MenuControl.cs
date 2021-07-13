@@ -67,8 +67,9 @@ public class MenuControl : MonoBehaviourPunCallbacks
 
     public override void OnDisconnected(DisconnectCause cause)
     {
-        GameManager.instance.ChangeScene(1);
+        GameManager.instance.ChangeScene(0);
         Debug.Log(userName + " has signed out");
+        PlayerData.instance.UpdateInMatch(false);
         base.OnDisconnected(cause);
     }
 

@@ -41,6 +41,29 @@ MonoBehaviour:
   - FlipTrue
   - FlipFalse
   - SpriteJump
+  - DisableCollider
+  - EnableCollider
+  - Ready
+  - StartRound
+  - Respawn
+  - Win
+  - FinishLoading
+  - Loading
+  - UpdateCheckpoint
+  - RankRacers
+  - LeadCamera
+  - OtherCameras
+  - EndGame
+  - StartRaceRPC
+  - BecomeHostRPC
+  - SubmitRules
+  - UpdateRulesRPC
+  - GetMasterDataRPC
+  - EnterLobbyRPC
+  - ChangeBoxMass
+  - TransferOwner
+  - LoseRPC
+  - UnreadyRPC
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
