@@ -32,5 +32,12 @@ public class MultiBoxOwnership : MonoBehaviour
     private void TransferOwner()
     {
         view.TransferOwnership(player);
+        StartCoroutine(StartDespawnBox(this.gameObject));
+    }
+
+    private IEnumerator StartDespawnBox(GameObject box)
+    {
+        yield return new WaitForSeconds(8f);
+        PhotonNetwork.Destroy(box);
     }
 }

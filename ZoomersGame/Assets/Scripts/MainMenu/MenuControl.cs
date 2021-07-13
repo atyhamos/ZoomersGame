@@ -69,6 +69,7 @@ public class MenuControl : MonoBehaviourPunCallbacks
     {
         GameManager.instance.ChangeScene(0);
         Debug.Log(userName + " has signed out");
+        PlayerData.instance.UpdateInMatch(false);
         base.OnDisconnected(cause);
     }
 

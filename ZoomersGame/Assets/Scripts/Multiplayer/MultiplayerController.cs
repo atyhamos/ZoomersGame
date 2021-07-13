@@ -28,7 +28,7 @@ public class MultiplayerController : MonoBehaviour
     public Checkpoint currentCheckpoint;
     public int rank = 0, wins = 0;
     public MultiplayerManager Manager;
-    public bool isReady, isHost, isLoading, lostRound;
+    public bool isReady, isHost, isLoading, lostRound, hasWon = false;
 
     private void Awake()
     {
@@ -52,6 +52,7 @@ public class MultiplayerController : MonoBehaviour
 
     void Start()
     {
+        PlayerCamera.SetActive(false);
         if (view.IsMine)
         {
             EnableButtons();
@@ -79,6 +80,7 @@ public class MultiplayerController : MonoBehaviour
         lostRound = false;
         isLoading = false;
         currentPowerUp = null;
+        hasWon = false;
     }
 
     [PunRPC]
@@ -132,6 +134,12 @@ public class MultiplayerController : MonoBehaviour
     [PunRPC]
     private void EnterLobbyRPC()
     {
+        PhotonNetwork.OpCleanRpcBuffer(view);
+        Manager.leadPlayer = null;
+        Manager.winnerName = null;
+        Manager.isRacing = false;
+        PlayerCamera.SetActive(true);
+        MultiBoundsCheck.instance.UpdateSize(PlayerCamera.GetComponent<CinemachineVirtualCamera>(), 17);
         Start();
     }
     public void EnterLobby()
@@ -140,17 +148,26 @@ public class MultiplayerController : MonoBehaviour
     }
 
     [PunRPC]
-    private void UpdateRulesRPC(int winsNeeded)
+    private void UpdateRulesRPC(int winsNeeded, bool isJustJoined)
     {
-        Manager.UpdateRules(winsNeeded);
+        Manager.UpdateRules(winsNeeded, isJustJoined);
     }
 
-    public void UpdateRules(int winsNeeded)
+    public void UpdateRules(int winsNeeded, bool isJustJoined)
     {
-        view.RPC("UpdateRulesRPC", RpcTarget.AllBuffered, winsNeeded);
+        view.RPC("UpdateRulesRPC", RpcTarget.AllBuffered, winsNeeded, isJustJoined);
     }
 
-
+    [PunRPC]
+    private void UnreadyRPC()
+    {
+        isReady = false;
+        Manager.readyButton.image.color = Color.grey;
+    }
+    public void Unready()
+    {
+        view.RPC("UnreadyRPC", RpcTarget.AllBuffered);
+    }
 
     public void DisableButtons()
     {
@@ -229,7 +246,7 @@ public class MultiplayerController : MonoBehaviour
         moveRight = false;
         jump = false;
         crouch = false;
-        rb.velocity = new Vector2(0, rb.velocity.y);
+        rb.velocity = new Vector2(0, -1000);
     }
 
     [PunRPC]
@@ -264,6 +281,7 @@ public class MultiplayerController : MonoBehaviour
     [PunRPC]
     private void FinishLoading()
     {
+        Debug.Log("Finished Loading!!");
         isLoading = false;
     }
     public void ReadyButton()
@@ -288,10 +306,17 @@ public class MultiplayerController : MonoBehaviour
     [PunRPC]
     private void Win()
     {
-        wins++;
-        Manager.UpdatePlayerScores(); // this is where checking if the match ends
-        if (view.IsMine && wins < Manager.winsNeeded)
-            Manager.StartCoroutine("ShowWin");
+        if (hasWon)
+            return;
+        else
+        {
+            wins++;
+            Debug.Log("You won! You now have " + wins + " wins");
+            hasWon = true;
+            Manager.UpdatePlayerScores(); // this is where checking if the match ends
+            if (view.IsMine && wins < Manager.winsNeeded)
+                Manager.StartCoroutine("ShowWin");
+        }
     }
 
     public void WinRound()
@@ -311,6 +336,7 @@ public class MultiplayerController : MonoBehaviour
         Manager.ResetRound();
         StopMoving();
         lostRound = false;
+        hasWon = false;
     }
 
     [PunRPC]
@@ -346,7 +372,8 @@ public class MultiplayerController : MonoBehaviour
     private void GetMasterDataRPC()
     {
         Manager.UpdatePlayerScores();
-        UpdateRules(Manager.winsNeeded);
+        Manager.JoinNonHostMessage();
+        UpdateRules(Manager.winsNeeded, true);
     }
 
     
@@ -431,6 +458,7 @@ public class MultiplayerController : MonoBehaviour
                     else
                     {
                         Debug.Log("Not in bounds");
+                        Lose();
                         lostRound = true;
                         StopMoving();
                         HideAllButtons();
@@ -448,6 +476,17 @@ public class MultiplayerController : MonoBehaviour
                 BecomeHost();
             }
         }
+    }
+
+    [PunRPC]
+    private void LoseRPC()
+    {
+        lostRound = true;
+    }
+
+    public void Lose()
+    {
+        view.RPC("LoseRPC", RpcTarget.AllBuffered);
     }
 
     [PunRPC]
@@ -478,6 +517,10 @@ public class MultiplayerController : MonoBehaviour
         view.RPC("StartRaceRPC", RpcTarget.AllBuffered);
     }
 
+    public bool InLobby()
+    {
+        return Manager.inLobby;
+    }
 
 
     public void CrossCheckpoint(Checkpoint checkpoint, bool correct)
@@ -528,4 +571,6 @@ public class MultiplayerController : MonoBehaviour
             view.RPC("FinishLoading", RpcTarget.AllBuffered);
         }
     }
+
+    
 }

@@ -34,16 +34,31 @@ public class CreateAndJoinRoom : MonoBehaviourPunCallbacks
 
     public void CreateRoom()
     {
+        StartCoroutine(CreateRoomTask());
+    }
+
+    public IEnumerator CreateRoomTask()
+    {
         if (createInput.text.Length < 6)
         {
             Debug.Log("Code is too short");
             createMessage.text = "Code should be at least 6 characters long";
-            return;
         }
         else
         {
-            Debug.Log("Created Room!");
-            PhotonNetwork.CreateRoom(createInput.text, new RoomOptions() { MaxPlayers = 4 }, null);
+            PlayerData.instance.loading = true;
+            PlayerData.instance.InMatch();
+            yield return new WaitForSeconds(1f);
+            //yield return new WaitUntil(predicate: () => PlayerData.instance.loading == false);
+            if (PlayerData.instance.alreadyInMatch)
+            {
+                createMessage.text = "You are already running a separate instance of the game!";
+            }
+            else
+            {
+                Debug.Log("Created Room!");
+                PhotonNetwork.CreateRoom(createInput.text, new RoomOptions() { MaxPlayers = 4 }, null);
+            }
         }
     }
 
@@ -56,14 +71,44 @@ public class CreateAndJoinRoom : MonoBehaviourPunCallbacks
 
     public void JoinRoom()
     {
-        Debug.Log("Joining room...");
-        PhotonNetwork.JoinRoom(joinInput.text);
+        StartCoroutine(JoinRoomTask());
+    }
+
+    public IEnumerator JoinRoomTask()
+    {
+        PlayerData.instance.InMatch();
+        PlayerData.instance.loading = true;
+        yield return new WaitUntil(predicate: () => PlayerData.instance.loading == false);
+        if (PlayerData.instance.alreadyInMatch)
+        {
+            joinMessage.text = "You are already running a separate instance of the game!";
+        }
+        else
+        {
+            Debug.Log("Joining room...");
+            PhotonNetwork.JoinRoom(joinInput.text);
+        }
+
     }
 
     public void JoinOrCreateRoom(string code)
     {
+        StartCoroutine(JoinOrCreateRoomTask(code));
+    }
+
+    public IEnumerator JoinOrCreateRoomTask(string code)
+    {
         Debug.Log("Attempting to join with room code: " + code);
-        PhotonNetwork.JoinOrCreateRoom(code, new RoomOptions() { MaxPlayers = 4 }, null);
+        PlayerData.instance.loading = true;
+        PlayerData.instance.InMatch();
+        yield return new WaitUntil(predicate: () => PlayerData.instance.loading == false);
+        if (PlayerData.instance.alreadyInMatch)
+        {
+            Debug.Log("You are already running a separate instance of the game!");
+            GameManager.instance.ChangeScene(3);
+        }
+        else
+            PhotonNetwork.JoinOrCreateRoom(code, new RoomOptions() { MaxPlayers = 4 }, null);
     }
 
 
@@ -82,6 +127,8 @@ public class CreateAndJoinRoom : MonoBehaviourPunCallbacks
 
     public override void OnJoinedRoom()
     {
+        PlayerData.instance.UpdateInMatch(true); // database
+        PlayerData.instance.inMatch = true; // local variable
         Debug.Log("Joined Room!");
         PhotonNetwork.LoadLevel("Multiplayer");
     }
@@ -98,8 +145,16 @@ public class CreateAndJoinRoom : MonoBehaviourPunCallbacks
     public override void OnLeftRoom()
     {
         if (GameManager.instance.rejoinCode != "")
+        {
             Debug.Log("Left Room! Attempting to rejoin now...");
+            PlayerData.instance.UpdateInMatch(false);
+            PlayerData.instance.inMatch = false;
+        }
         else
+        {
             Debug.Log("Left Room!");
+            PlayerData.instance.UpdateInMatch(false);
+            PlayerData.instance.inMatch = false;
+        }    
     }
 }

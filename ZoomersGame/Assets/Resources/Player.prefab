@@ -3127,6 +3127,7 @@ MonoBehaviour:
   isHost: 0
   isLoading: 0
   lostRound: 0
+  hasWon: 0
 --- !u!114 &7063245382834786212
 MonoBehaviour:
   m_ObjectHideFlags: 0

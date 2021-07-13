@@ -38,6 +38,7 @@ public class MultiBoxPowerUp : MultiPowerUp
     private IEnumerator StartDespawnBox(GameObject box)
     {
         yield return new WaitForSeconds(8f);
-        PhotonNetwork.Destroy(box);
+        if (player.GetComponent<PhotonView>().IsMine)
+            PhotonNetwork.Destroy(box);
     }
 }

@@ -12,9 +12,9 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     public float minX, maxX, minY, maxY;
     [SerializeField] private Text PingText;
     [SerializeField] private GameObject PlayerPrefab;
-    [SerializeField] private GameObject rejoinUI, loseUI, startUI, readyUI, winUI, rulesUI, winnerUI;
+    [SerializeField] private GameObject rejoinUI, loseUI, startUI, readyUI, winUI, rulesUI, winnerUI, countdown;
     [SerializeField] private Transform spawnLocation;
-    [SerializeField] private Text playerCount, players, winCount, winnerScreen;
+    [SerializeField] private Text playerCount, players, winCount, winnerScreen, debugStuff, hostMessage, nonhostMessage;
     [SerializeField] private GameObject loadingUI, holdingArea;
     [SerializeField] private Text countdownText;
     [SerializeField] private GameObject Checkpoints;
@@ -25,7 +25,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     public Button readyButton;
     private Player[] playerList;
     private Vector2 randomPosition, respawnLocation;
-    private string roomCode;
+    private string roomCode, playersNotReady;
     private MultiplayerController player;
     private int pingUpdate = 1; // 1 second
     public List<MultiplayerController> racersArray, racersScores;
@@ -69,10 +69,13 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     {
         if (PhotonNetwork.NetworkingClient == null || player == null)
         {
+            PlayerData.instance.UpdateInMatch(false);
+            PlayerData.instance.inMatch = false;
             ClearUI();
             rejoinUI.SetActive(true);
             return;
         }
+        debugStuff.text = $"inLobby:{inLobby}\nisRacing:{isRacing}\nAllLoaded:{AllLoaded()}";
         if (Time.time >= pingUpdate)
         {
             pingUpdate = Mathf.FloorToInt(Time.time) + 1;
@@ -80,18 +83,33 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         }
         if (inLobby)
         {
-            if (AllReady())
-                startButton.interactable = true;
-            else
-                startButton.interactable = false;
+            countdown.SetActive(false);
+            if (player.isHost)
+            {
+                if (PlayerCount() == 1)
+                {
+                    hostMessage.text = "Online races require at least 2 players";
+                    startButton.interactable = false;
+                }
+                else if (!AllReady())
+                {
+                    hostMessage.text = "Players yet to ready: " + playersNotReady;
+                    startButton.interactable = false;
+                }
+                else
+                {
+                    hostMessage.text = "";
+                    startButton.interactable = true;
+                }
+            }
         }
         else
         {
             // at racing map but race hasnt started
-            if (!isRacing && AllLoaded())
+            if (!isRacing && AllAtMap())
             {
                 player.DisableButtons();
-                countdownText.gameObject.SetActive(true);
+                countdown.SetActive(true);
                 countdownUntil -= 1 * Time.deltaTime;
                 countdownText.text = "Race is starting in " + countdownUntil.ToString("0");
                 if (countdownUntil <= 0.5)
@@ -114,11 +132,17 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         countdownText.text = "GO!";
         yield return new WaitForSeconds(2f);
         countdownText.CrossFadeAlpha(0, 1, false);
+        countdown.GetComponentInChildren<Image>().CrossFadeAlpha(0, 1, false);
         yield return new WaitForSeconds(1f);
-        countdownText.gameObject.SetActive(false);
+        countdown.SetActive(false);
         countdownUntil = 3f; // reset
         countdownText.fontSize = 25; // reset
         countdownText.text = "Race is starting in " + countdownUntil.ToString("0"); // reset
+    }
+    
+    public void JoinNonHostMessage()
+    {
+        nonhostMessage.text = "Press Ready for the host to start the match";
     }
 
     public void ReadyButton()
@@ -128,6 +152,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         else
             readyButton.image.color = Color.green;
         player.ReadyButton();
+        ClearMessage();
     }
 
     private bool AllLoaded()
@@ -144,14 +169,15 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     {
         loadingUI.SetActive(true);
         player.Load();
+        Checkpoints.SetActive(false); // to prevent accidental crossing of checkpoints
         player.transform.position = randomPosition;
         player.StopMoving();
         player.HideAllButtons();
-        Checkpoints.SetActive(false); // to prevent accidental crossing of checkpoints
         startUI.SetActive(false);
         readyUI.SetActive(false);
-        while (!AllLoaded())
-            yield return null;
+        //while (!AllLoaded())
+        //    yield return null;
+        yield return new WaitForSeconds(1f);
         loadingUI.SetActive(false);
         inLobby = false;
     }
@@ -190,27 +216,70 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
 
     public void SubmitRules()
     {
-        UpdateRules(int.Parse(winsInput.text));
+        UpdateRules(int.Parse(winsInput.text), false);
         ShowHideRules();
-        player.UpdateRules(winsNeeded);
+        player.UpdateRules(winsNeeded, false);
     }
 
-    public void UpdateRules(int wins)
+    public void UpdateRules(int wins, bool isJustJoined)
     {
         winsNeeded = wins;
         winCount.text = $"First to {winsNeeded} wins";
+        foreach (MultiplayerController player in racersArray)
+        {
+            if (!player.isHost)
+                player.Unready();
+        }
+        if (isJustJoined)
+            JoinNonHostMessage();
+        else
+            UpdateRulesMessage();
+    }
+
+    public void UpdateRulesMessage()
+    {
+        nonhostMessage.text = "Settings were changed! \nCheck the match settings and ready up!";
+
+    }
+
+    public void ClearMessage()
+    {
+        nonhostMessage.text = "";
     }
 
     public bool AllReady()
     {
+        string tempplayersNotReady = "";
         foreach (MultiplayerController player in racersArray)
         {
-            if (player.isReady)
+            if (player.isReady || player.isHost)
+                continue;
+            else
+            {
+                if (tempplayersNotReady == "")
+                {
+                    tempplayersNotReady += player.PlayerNameText.text;
+                    continue;
+                }
+                else
+                    tempplayersNotReady += ", " + player.PlayerNameText.text;
+            }
+        }
+        playersNotReady = tempplayersNotReady;
+        //Debug.Log("all ready!");
+        return tempplayersNotReady == "" ? true : false;
+    }
+
+    public bool AllAtMap()
+    {
+        foreach (MultiplayerController player in racersArray)
+        {
+            if (!player.InLobby())
                 continue;
             else
                 return false;
         }
-        //Debug.Log("all ready!");
+        //Debug.Log("all at map!");
         return true;
     }
 
@@ -232,7 +301,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
 
     public void Home()
     {
-        SceneManager.LoadScene("Loading");
+        SceneManager.LoadScene("MainMenu");
         CreateAndJoinRoom.instance.LeaveRoom();
     }
 
@@ -310,8 +379,8 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     {
         rejoinUI.SetActive(false);
         GameManager.instance.rejoinCode = roomCode;
-        SceneManager.LoadSceneAsync("Loading");
         CreateAndJoinRoom.instance.LeaveRoom();
+        SceneManager.LoadSceneAsync("Loading"); 
     }
 
     public void RankRacers()
@@ -413,14 +482,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
 //            }
 //        }
         playerList = PhotonNetwork.PlayerList;
-        foreach (Player player in playerList)
-        {
-            if (!player.IsMasterClient)
-            {
-                PhotonNetwork.SetMasterClient(player);
-                break;
-            }
-        }
+        PhotonNetwork.SetMasterClient(playerList[0]);
         StartCoroutine(UpdateTask());
         Debug.Log("Player " + otherPlayer.ToString() + " has left. Updating players...");
         playerCount.text = $"Number of players: {PlayerCount()}";

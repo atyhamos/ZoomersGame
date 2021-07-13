@@ -68,7 +68,7 @@ public class PlayerController2D : MonoBehaviour
     }
     public void Home()
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene("Loading");
+        GameManager.instance.ChangeScene(3);
     }
 
     private void Update()
