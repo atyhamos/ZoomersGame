@@ -12,7 +12,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     public float minX, maxX, minY, maxY;
     [SerializeField] private Text PingText;
     [SerializeField] private GameObject PlayerPrefab;
-    [SerializeField] private GameObject rejoinUI, loseUI, startUI, readyUI, winUI, rulesUI, winnerUI, countdown;
+    [SerializeField] private GameObject rejoinUI, loseUI, startUI, readyUI, winUI, rulesUI, winnerUI, skinsUI, countdown;
     [SerializeField] private Transform spawnLocation;
     [SerializeField] private Text playerCount, players, winCount, winnerScreen, debugStuff, hostMessage, nonhostMessage;
     [SerializeField] private GameObject loadingUI, holdingArea;
@@ -34,8 +34,10 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     private float countdownUntil = 3f;
     public bool inLobby, allPrepared = false;
     public MultiplayerController leadPlayer;
-    private bool rulesOpen;
+    private bool rulesOpen, skinsOpen;
     private PhotonView view;
+    public RuntimeAnimatorController skin;
+    private int skinIndex;
 
     private void Awake()
     {
@@ -290,6 +292,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         startUI.SetActive(true);
         player.isReady = true;
         rulesOpen = false;
+        skinsOpen = false;
     }
 
     public void LoadReady()
@@ -297,6 +300,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         player.isReady = false;
         startUI.SetActive(false);
         readyUI.SetActive(true);
+        skinsOpen = false;
     }
 
     public void Home()
@@ -519,4 +523,50 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
             }
         }
     }
+
+    public void ShowHideSkinSelection()
+    {
+        if (skinsOpen)
+            skinsUI.SetActive(false);
+        else
+            skinsUI.SetActive(true);
+        skinsOpen = !skinsOpen;
+    }
+
+    public void ChangeSkin()
+    {
+        player.ChangeSkin(skinIndex);
+    }
+
+    public void ChangeFox()
+    {
+        Debug.Log("Change to Fox");
+        player.ChangeSkin(0);
+    }
+
+    public void ChangeMask()
+    {
+        Debug.Log("Change to Mask Dude!");
+        player.ChangeSkin(1);
+    }
+
+    public void ChangeNinja()
+    {
+        Debug.Log("Change to Ninja Frog!");
+        player.ChangeSkin(2);
+    }
+
+    public void ChangePink()
+    {
+        Debug.Log("Change to Pink Man!");
+        player.ChangeSkin(3);
+    }
+
+    public void ChangeVirtual()
+    {
+        Debug.Log("Change to Virtual Guy!");
+        player.ChangeSkin(4);
+    }
+
+
 }

@@ -4936,6 +4936,7 @@ GameObject:
   - component: {fileID: 1287853034}
   - component: {fileID: 1287853033}
   - component: {fileID: 1287853035}
+  - component: {fileID: 1287853036}
   m_Layer: 5
   m_Name: RoundedBox
   m_TagString: Untagged
@@ -5020,6 +5021,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   firstInput: {fileID: 0}
   submitButton: {fileID: 1202509835}
+--- !u!95 &1287853036
+Animator:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1287853031}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 948024072721b61409e47f303c790b24, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!1 &1336343092
 GameObject:
   m_ObjectHideFlags: 0

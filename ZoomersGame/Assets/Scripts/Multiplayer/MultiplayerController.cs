@@ -29,6 +29,7 @@ public class MultiplayerController : MonoBehaviour
     public int rank = 0, wins = 0;
     public MultiplayerManager Manager;
     public bool isReady, isHost, isLoading, lostRound, hasWon = false;
+    public List<RuntimeAnimatorController> skins;
 
     private void Awake()
     {
@@ -554,6 +555,15 @@ public class MultiplayerController : MonoBehaviour
         animator.SetBool("IsSliding", isSliding);
     }
 
+    [PunRPC]
+    private void ChangeSkinRPC(int skinIndex)
+    {
+        GetComponent<Animator>().runtimeAnimatorController = skins[skinIndex];
+    }
+    public void ChangeSkin(int skinIndex)
+    {
+        view.RPC("ChangeSkinRPC", RpcTarget.AllBuffered, skinIndex);
+    }
     private void FixedUpdate()
     {
         if (view.IsMine)
