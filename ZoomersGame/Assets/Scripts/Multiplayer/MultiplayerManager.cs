@@ -12,7 +12,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     public float minX, maxX, minY, maxY;
     [SerializeField] private Text PingText;
     [SerializeField] private GameObject PlayerPrefab;
-    [SerializeField] private GameObject rejoinUI, loseUI, startUI, readyUI, winUI, rulesUI, winnerUI, skinsUI, countdown;
+    [SerializeField] private GameObject rejoinUI, loseUI, startUI, readyUI, winUI, rulesUI, winnerUI, skinsUI, skinsButton, countdown;
     [SerializeField] private Transform spawnLocation;
     [SerializeField] private Text playerCount, players, winCount, winnerScreen, debugStuff, hostMessage, nonhostMessage;
     [SerializeField] private GameObject loadingUI, holdingArea;
@@ -90,8 +90,16 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
             {
                 if (PlayerCount() == 1)
                 {
-                    hostMessage.text = "Online races require at least 2 players";
-                    startButton.interactable = false;
+                    if (player.PlayerNameText.text == "Amos" || player.PlayerNameText.text == "atyhamos")
+                    {
+                        hostMessage.text = "Debug Mode";
+                        startButton.interactable = true;
+                    }
+                    else
+                    {
+                        hostMessage.text = "Online races require at least 2 players";
+                        startButton.interactable = false;
+                    }
                 }
                 else if (!AllReady())
                 {
@@ -177,6 +185,9 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         player.HideAllButtons();
         startUI.SetActive(false);
         readyUI.SetActive(false);
+        skinsOpen = false;
+        skinsButton.SetActive(false);
+        skinsUI.SetActive(false);
         //while (!AllLoaded())
         //    yield return null;
         yield return new WaitForSeconds(1f);
@@ -357,6 +368,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         rulesUI.SetActive(false);
         winnerUI.SetActive(false);
         loadingUI.SetActive(false);
+        skinsButton.SetActive(false);
     }
 
     public IEnumerator ShowWin()
@@ -466,25 +478,6 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     {
         if (racersArray.Count == 1)
             return;
-
-//        for (int i = 0; i < racersArray.Count; i++)
-//        {
-//            if (racersArray[i].isHost)
-//            {
-//                if (i + 1 >= racersArray.Count)
-//                {
-//                    racersArray[0].BecomeHost();
-//                    Debug.Log($"{racersArray[i].PlayerNameText.text} transferred host to {racersArray[0].PlayerNameText.text}!");
-//                    return;
-//                }
-//                else
-//                {
-//                    racersArray[i + 1].BecomeHost();
-//                    Debug.Log($"{racersArray[i].PlayerNameText.text} transferred host to {racersArray[i + 1].PlayerNameText.text}!");
-//                    return;
-//                }
-//            }
-//        }
         playerList = PhotonNetwork.PlayerList;
         PhotonNetwork.SetMasterClient(playerList[0]);
         StartCoroutine(UpdateTask());

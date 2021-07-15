@@ -65,6 +65,8 @@ MonoBehaviour:
   - LoseRPC
   - UnreadyRPC
   - ChangeSkinRPC
+  - HideWingsRPC
+  - ShowWingsRPC
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

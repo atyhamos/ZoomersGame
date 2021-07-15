@@ -17,7 +17,7 @@ public class CharacterController2D : MonoBehaviour
 	public bool isGrounded;            // Whether or not the player is grounded.
 	private bool canDoubleJump;
 	const float ceilingRadius = .0625f; // Radius of the overlap circle to determine if the player can stand up
-	private Rigidbody2D rb;
+	public Rigidbody2D rb;
 	private  bool m_FacingRight = true;  // For determining which way the player is currently facing.
 	public bool isTouchingFront; // Checking if there is something in front
 	private bool wallSliding;
@@ -215,9 +215,13 @@ public class CharacterController2D : MonoBehaviour
 		theScale.x *= -1;
 		transform.localScale = theScale;
 
-		Vector3 nameScale = transform.GetChild(0).transform.GetChild(0).localScale;
+		Vector3 nameScale = transform.GetChild(0).transform.GetChild(1).localScale;
 		nameScale.x *= -1;
-		transform.GetChild(0).transform.GetChild(0).localScale = nameScale;
+		transform.GetChild(0).transform.GetChild(1).localScale = nameScale;
+
+		Vector3 backgroundScale = transform.GetChild(0).transform.GetChild(0).localScale;
+		backgroundScale.x *= -1;
+		transform.GetChild(0).transform.GetChild(0).localScale = backgroundScale;
 	}
 
 	private void OnCollisionEnter2D(Collision2D collision)

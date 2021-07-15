@@ -19,7 +19,7 @@ public class MultiCharacterController : MonoBehaviour
 	public bool isGrounded;            // Whether or not the player is grounded.
 	public bool canDoubleJump;
 	const float ceilingRadius = .0625f; // Radius of the overlap circle to determine if the player can stand up
-	private Rigidbody2D rb;
+	public Rigidbody2D rb;
 	private bool m_FacingRight = true;  // For determining which way the player is currently facing.
 	public bool isTouchingFront; // Checking if there is something in front
 	private bool wallSliding;

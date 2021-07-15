@@ -9,18 +9,19 @@ public class PlayerController2D : MonoBehaviour
     [SerializeField] Animator animator;
     [SerializeField] CharacterController2D controller;
     Rigidbody2D rb;
-    public GameObject PlayerCamera;
-    public GameObject PlayerButtons;
+    public GameObject PlayerCamera, PlayerButtons, nameBackground, wings;
     public Text PlayerNameText;
     public bool hasPowerUp, usingPowerUp;
     public PowerUp previousPowerUp, currentPowerUp;
-    private bool moveLeft, moveRight, jump, crouch;
+    public bool moveLeft, moveRight, jump, crouch;
     private int horizontalMove;
+    public bool jumpButtonDown;
 
     void Start()
     {
         PlayerNameText.text = PhotonNetwork.NickName;
         rb = GetComponent<Rigidbody2D>();
+        nameBackground.transform.localScale = new Vector3(PlayerNameText.text.Length / 1.5f, 2.5f, 0f);
         moveLeft = false;
         moveRight = false;
         crouch = false;
@@ -38,6 +39,12 @@ public class PlayerController2D : MonoBehaviour
     public void Jump()
     {
         jump = true;
+        jumpButtonDown = true;
+    }
+
+    public void Float()
+    {
+        jumpButtonDown = false;
     }
     public void Crouch()
     {
