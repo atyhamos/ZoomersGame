@@ -209,6 +209,7 @@ public class MultiCharacterController : MonoBehaviour
 		if (jump && isGrounded && !isSliding)
 		{
 			// Add a vertical force to the player.
+			AudioManager.instance.Play("Jump");
 			anim.SetBool("IsJumping", true);
 			anim.SetBool("IsFalling", false);
 			isGrounded = false;
@@ -217,6 +218,7 @@ public class MultiCharacterController : MonoBehaviour
 		}
 		else if (jump && canDoubleJump && !isSliding)
 		{
+			AudioManager.instance.Play("Jump");
 			anim.SetBool("IsJumping", true);
 			anim.SetBool("IsFalling", false);
 			rb.velocity = new Vector2(rb.velocity.x, 0.8f * jumpForce);
@@ -224,6 +226,7 @@ public class MultiCharacterController : MonoBehaviour
 		}
 		else if (jump && isTouchingFront && canWallJump)
 		{
+			AudioManager.instance.Play("Jump");
 			anim.SetBool("IsJumping", true);
 			anim.SetBool("IsFalling", false);
 			rb.velocity = new Vector2(rb.velocity.x, 0.8f * jumpForce);
@@ -276,6 +279,7 @@ public class MultiCharacterController : MonoBehaviour
 			if (!player.HasPowerUp())
 			{
 				MultiPowerUp power = collision.gameObject.GetComponent<MultiPowerUp>();
+				AudioManager.instance.Play("PowerUp");
 				power.Pickup(this, player);
 				player.currentPowerUp = power;
 			}
@@ -286,6 +290,7 @@ public class MultiCharacterController : MonoBehaviour
 			if (!player.HasPowerUp())
 			{
 				MultiPowerUp power = collision.GetComponent<MultiRandomPowerUp>().GetRandomPower();
+				AudioManager.instance.Play("PowerUp");
 				power.Pickup(this, player);
 				player.currentPowerUp = power;
 			}

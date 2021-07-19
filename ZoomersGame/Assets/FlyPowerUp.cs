@@ -17,6 +17,7 @@ public class FlyPowerUp : PowerUp
 
     public override void Consume()
     {
+        AudioManager.instance.Play("Wings");
         Debug.Log("Flying!");
         player.hasPowerUp = false;
         player.usingPowerUp = true;

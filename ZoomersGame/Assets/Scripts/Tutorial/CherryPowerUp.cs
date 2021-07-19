@@ -13,6 +13,7 @@ public class CherryPowerUp : PowerUp
 
     public override void Consume()
     {
+        AudioManager.instance.Play("Cherry");
         Debug.Log("Consumed cherry! Boosting!");
         player.hasPowerUp = false;
         player.usingPowerUp = true;

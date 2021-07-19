@@ -32,12 +32,14 @@ public class MenuUIManager : MonoBehaviour
 
     public void MainScreen()
     {
+        AudioManager.instance.ButtonPress();
         ClearUI();
         MainUI.SetActive(true);
     }
 
     public void LeaderboardScreen()
     {
+        AudioManager.instance.ButtonPress();
         ClearUI();  
         LeaderboardUI.SetActive(true);
         PlayerData.instance.LoadScoreboard();
@@ -45,18 +47,21 @@ public class MenuUIManager : MonoBehaviour
 
     public void OnlineScreen()
     {
+        AudioManager.instance.ButtonPress();
         ClearUI();
         OnlineUI.SetActive(true);
     }
 
     public void CreateScreen()
     {
+        AudioManager.instance.ButtonPress();
         ClearUI();
         CreateUI.SetActive(true);
     }
 
     public void JoinScreen()
     {
+        AudioManager.instance.ButtonPress();
         ClearUI();
         JoinUI.SetActive(true);
     }

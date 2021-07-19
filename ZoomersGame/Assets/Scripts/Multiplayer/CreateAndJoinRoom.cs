@@ -34,6 +34,7 @@ public class CreateAndJoinRoom : MonoBehaviourPunCallbacks
 
     public void CreateRoom()
     {
+        AudioManager.instance.ButtonPress();
         StartCoroutine(CreateRoomTask());
     }
 
@@ -71,6 +72,7 @@ public class CreateAndJoinRoom : MonoBehaviourPunCallbacks
 
     public void JoinRoom()
     {
+        AudioManager.instance.ButtonPress();
         StartCoroutine(JoinRoomTask());
     }
 

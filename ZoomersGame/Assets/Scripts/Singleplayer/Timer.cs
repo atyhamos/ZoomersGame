@@ -28,6 +28,7 @@ public class Timer : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        AudioManager.instance.Race();
         countdownUntil = countdownStart;
         startTime = Time.time; // gives time since application started
     }

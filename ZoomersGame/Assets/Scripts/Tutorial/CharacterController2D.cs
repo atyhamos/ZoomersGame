@@ -76,8 +76,7 @@ public class CharacterController2D : MonoBehaviour
 			canDoubleJump = true;
 	}
 
-
-	public void Move(float move, bool crouch, bool jump)
+    public void Move(float move, bool crouch, bool jump)
 	{
 		// SLIDING
 		// If not pressing crouch, check to see if the character can stand up
@@ -188,17 +187,20 @@ public class CharacterController2D : MonoBehaviour
 		if (jump && isGrounded && !isSliding)
 		{
 			// Add a vertical force to the player.
+			AudioManager.instance.Play("Jump");
 			isGrounded = false;
 			rb.velocity = new Vector2(rb.velocity.x, jumpForce);
 			canDoubleJump = true;
 		}
 		else if (jump && canDoubleJump && !isSliding)
 		{
+			AudioManager.instance.Play("Jump");
 			rb.velocity = new Vector2(rb.velocity.x, 0.8f * jumpForce);
 			canDoubleJump = false;
 		}
 		else if (jump && isTouchingFront && canWallJump)
         {
+			AudioManager.instance.Play("Jump");
 			rb.velocity = new Vector2(rb.velocity.x, 0.8f * jumpForce);
 			canWallJump = false;
 			canDoubleJump = true;
@@ -240,6 +242,7 @@ public class CharacterController2D : MonoBehaviour
         {
 			GetComponent<PlayerController2D>().StopMoving();
 			GetComponent<Timer>().Finish();
+			AudioManager.instance.GameWin();
         }
 
 		if (collision.CompareTag("PowerUp"))
@@ -248,6 +251,7 @@ public class CharacterController2D : MonoBehaviour
 			if (!player.hasPowerUp)
             {
 				PowerUp power = collision.gameObject.GetComponent<PowerUp>();
+				AudioManager.instance.Play("PowerUp");
 				power.Pickup(this, player);
 				player.currentPowerUp = power;
 				player.hasPowerUp = true;
@@ -260,6 +264,7 @@ public class CharacterController2D : MonoBehaviour
 			if (!player.hasPowerUp)
             {
 				PowerUp power = collision.GetComponent<RandomPowerUp>().GetRandomPower();
+				AudioManager.instance.Play("PowerUp");
 				power.Pickup(this, player);
 				player.currentPowerUp = power;
 				player.hasPowerUp = true;

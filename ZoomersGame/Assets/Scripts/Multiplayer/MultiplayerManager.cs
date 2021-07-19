@@ -157,6 +157,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
 
     public void ReadyButton()
     {
+        AudioManager.instance.ButtonPress();
         if (player.isReady)
             readyButton.image.color = Color.grey;
         else
@@ -193,9 +194,11 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         yield return new WaitForSeconds(1f);
         loadingUI.SetActive(false);
         inLobby = false;
+        AudioManager.instance.Race();
     }
     public void StartButton()
     {
+        AudioManager.instance.ButtonPress();
         foreach (MultiplayerController player in racersArray)
         {
             player.StartButton(); //RPC call
@@ -215,12 +218,14 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         winsInput.text = "";
         if (!rulesOpen)
         {
+            AudioManager.instance.Play("Menu Open");
             player.StopMoving();
             player.HideAllButtons();
             rulesUI.SetActive(true);
         }
         else
         {
+            AudioManager.instance.Play("Menu Close");
             player.EnableButtons();
             rulesUI.SetActive(false);
         }
@@ -229,8 +234,11 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
 
     public void SubmitRules()
     {
+        AudioManager.instance.ButtonPress();
         UpdateRules(int.Parse(winsInput.text), false);
-        ShowHideRules();
+        player.EnableButtons();
+        rulesUI.SetActive(false);
+        rulesOpen = !rulesOpen;
         player.UpdateRules(winsNeeded, false);
     }
 
@@ -318,6 +326,8 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
 
     public void Home()
     {
+        AudioManager.instance.ButtonPress();
+        AudioManager.instance.Main();
         SceneManager.LoadScene("MainMenu");
         CreateAndJoinRoom.instance.LeaveRoom();
     }
@@ -344,11 +354,12 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     public IEnumerator ShowWinner()
     {
         // Game ends here
+        AudioManager.instance.GameWin();
         ClearUI();
         winnerScreen.text = $"Our winner!\n{winnerName}";
         winnerUI.SetActive(true);
         Checkpoints.SetActive(false);
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(5f);
         winnerUI.SetActive(false);
         loadingUI.SetActive(true);
         player.transform.position =  spawnLocation.position;
@@ -522,10 +533,21 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     public void ShowHideSkinSelection()
     {
         if (skinsOpen)
+        {
+            AudioManager.instance.Play("Menu Open");
             skinsUI.SetActive(false);
+        }
         else
+        {
+            AudioManager.instance.Play("Menu Close");
             skinsUI.SetActive(true);
+        }
         skinsOpen = !skinsOpen;
+    }
+
+    public void Click()
+    {
+        AudioManager.instance.Click();
     }
 
     public void ChangeSkin()
@@ -535,30 +557,35 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
 
     public void ChangeFox()
     {
+        AudioManager.instance.ButtonPress();
         Debug.Log("Change to Fox");
         player.ChangeSkin(0);
     }
 
     public void ChangeMask()
     {
+        AudioManager.instance.ButtonPress();
         Debug.Log("Change to Mask Dude!");
         player.ChangeSkin(1);
     }
 
     public void ChangeNinja()
     {
+        AudioManager.instance.ButtonPress();
         Debug.Log("Change to Ninja Frog!");
         player.ChangeSkin(2);
     }
 
     public void ChangePink()
     {
+        AudioManager.instance.ButtonPress();
         Debug.Log("Change to Pink Man!");
         player.ChangeSkin(3);
     }
 
     public void ChangeVirtual()
     {
+        AudioManager.instance.ButtonPress();
         Debug.Log("Change to Virtual Guy!");
         player.ChangeSkin(4);
     }

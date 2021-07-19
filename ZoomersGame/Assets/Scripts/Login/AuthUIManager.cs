@@ -33,20 +33,33 @@ public class AuthUIManager : MonoBehaviour
 
     public void LoginScreen()
     {
+        AudioManager.instance.ButtonPress();
         ClearUI();
         loginUI.SetActive(true);
     }
 
     public void RegisterScreen()
     {
+        AudioManager.instance.ButtonPress();
         ClearUI();
         registerUI.SetActive(true);
     }
 
     public void ResetScreen()
     {
+        AudioManager.instance.ButtonPress();
         ClearUI();
         resetUI.SetActive(true);
+    }
+
+    public void Click()
+    {
+        AudioManager.instance.Click();
+    }
+
+    public void ButtonPress()
+    {
+        AudioManager.instance.ButtonPress();
     }
 
     public void AwaitVerification(bool _emailSent, string _email, string _output)

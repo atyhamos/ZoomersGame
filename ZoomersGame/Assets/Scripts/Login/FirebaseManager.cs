@@ -134,16 +134,19 @@ public class FirebaseManager : MonoBehaviour
 
     public void LoginButton()
     {
+        AudioManager.instance.ButtonPress();
         StartCoroutine(LoginLogic(loginEmail.text, loginPassword.text));
     }
 
     public void RegisterButton()
     {
+        AudioManager.instance.ButtonPress();
         StartCoroutine(RegisterLogic(registerUsername.text, registerEmail.text, registerPassword.text, registerConfirmPassword.text));
     }
 
     public void ResetButton()
     {
+        AudioManager.instance.ButtonPress();
         StartCoroutine(ResetPasswordLogic(resetEmail.text));
     }
 

@@ -61,6 +61,7 @@ public class MultiplayerController : MonoBehaviour
         PlayerCamera.SetActive(false);
         if (view.IsMine)
         {
+            AudioManager.instance.HoldingArea();
             EnableButtons();
             PlayerCamera.SetActive(true);
             if (isHost)

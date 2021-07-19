@@ -75,6 +75,8 @@ public class PlayerController2D : MonoBehaviour
     }
     public void Home()
     {
+        AudioManager.instance.ButtonPress();
+        AudioManager.instance.Main();
         GameManager.instance.ChangeScene(3);
     }
 

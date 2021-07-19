@@ -12,6 +12,7 @@ public class MultiCherryPowerUp : MultiPowerUp
 
     public override void Consume()
     {
+        AudioManager.instance.Play("Cherry");
         Debug.Log("Consumed cherry! Boosting!");
         player.usingPowerUp = true;
         co = StartCoroutine(SpeedUp());

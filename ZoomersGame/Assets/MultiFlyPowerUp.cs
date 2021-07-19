@@ -14,6 +14,7 @@ public class MultiFlyPowerUp : MultiPowerUp
 
     public override void Consume()
     {
+        AudioManager.instance.Play("Wings");
         Debug.Log("Flying!");
         player.usingPowerUp = true;
         co = StartCoroutine(Fly());
