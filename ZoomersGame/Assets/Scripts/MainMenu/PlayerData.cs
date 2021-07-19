@@ -202,27 +202,35 @@ public class PlayerData : MonoBehaviour
     private void OnDestroy()
     {
         if (inMatch)
+        {
+            Debug.Log("destroy");
             UpdateInMatch(false);
+        }    
     }
 
     private void OnApplicationPause(bool pause)
     {
         if (inMatch)
+        {
+            Debug.Log("pause");
             UpdateInMatch(false);
+        }
     }
 
     private void OnApplicationFocus(bool focus)
     {
         if (inMatch)
-            UpdateInMatch(true);
+        {
+            if (focus)
+            {
+                Debug.Log("focus");
+                UpdateInMatch(true);
+            }
+            else
+            {
+                Debug.Log("lose focus");
+                UpdateInMatch(false);
+            }
+        }
     }
-
-    //private IEnumerator AutoRemoveFromMatch()
-    //{
-    //    yield return new WaitForSeconds(20f);
-    //    if (isPaused && inMatch)
-    //    {
-    //        UpdateInMatch(false);
-    //    }
-    //}
 }

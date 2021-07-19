@@ -294,7 +294,7 @@ public class MultiCharacterController : MonoBehaviour
 		if (collision.CompareTag("Checkpoint"))
         {
 			if (player.currentCheckpoint == null
-				&& collision.GetComponent<Checkpoint>() == GameObject.Find("Checkpoint 1").GetComponent<Checkpoint>())
+				&& collision.GetComponent<Checkpoint>() == GameObject.Find("Checkpoint 0").GetComponent<Checkpoint>())
             {
 				Debug.Log("Crossed first checkpoint!");
 				player.currentCheckpoint = collision.GetComponent<Checkpoint>();

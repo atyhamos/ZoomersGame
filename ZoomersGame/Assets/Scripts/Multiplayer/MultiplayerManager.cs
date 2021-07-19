@@ -90,7 +90,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
             {
                 if (PlayerCount() == 1)
                 {
-                    if (player.PlayerNameText.text == "Amos" || player.PlayerNameText.text == "atyhamos")
+                    if (player.PlayerNameText.text == "Amos" || player.PlayerNameText.text == "atyhamos" || player.PlayerNameText.text == "ryan")
                     {
                         hostMessage.text = "Debug Mode";
                         startButton.interactable = true;
@@ -301,6 +301,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         Debug.Log("Loading start menu");
         readyUI.SetActive(false);
         startUI.SetActive(true);
+        skinsButton.SetActive(true);
         player.isReady = true;
         rulesOpen = false;
         skinsOpen = false;
@@ -311,6 +312,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         player.isReady = false;
         startUI.SetActive(false);
         readyUI.SetActive(true);
+        skinsButton.SetActive(true);
         skinsOpen = false;
     }
 

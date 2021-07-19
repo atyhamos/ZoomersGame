@@ -51,9 +51,25 @@ public class MultiFlyPowerUp : MultiPowerUp
         {
             if (player.jumpButtonDown)
             {
-                Debug.Log("here");
-                controller.rb.velocity = new Vector2(controller.rb.velocity.x, controller.rb.velocity.y + flyForce);
+                if (controller.rb.velocity.y < 0)
+                {
+                    controller.rb.velocity = new Vector2(controller.rb.velocity.x, 0);
+                }
+                else
+                {
+                    controller.rb.velocity = new Vector2(controller.rb.velocity.x, controller.rb.velocity.y + flyForce);
+                    float scale = controller.rb.gravityScale;
+                    scale -= 0.003f;
+                    controller.rb.gravityScale = scale;
+                    Debug.Log(controller.rb.gravityScale);
+                }
             }
+            else
+                controller.rb.gravityScale = 4.5f;
         }
+        else if (controller == null)
+            return;
+        else
+            controller.rb.gravityScale = 4.5f;
     }
 }
