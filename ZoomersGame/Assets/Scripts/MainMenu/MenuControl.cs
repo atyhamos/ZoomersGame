@@ -86,4 +86,14 @@ public class MenuControl : MonoBehaviourPunCallbacks
     {
         AudioManager.instance.Click();
     }
+
+    public void ToggleBGM()
+    {
+        AudioManager.instance.ToggleBGM();
+    }
+
+    public void ToggleFX()
+    {
+        AudioManager.instance.ToggleFX();
+    }
 }

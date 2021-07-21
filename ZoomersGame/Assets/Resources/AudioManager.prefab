@@ -88,7 +88,7 @@ MonoBehaviour:
     source: {fileID: 0}
   - name: Jump
     clip: {fileID: 8300000, guid: 5edd278e4b5ce634da8ff57af324d083, type: 3}
-    volume: 0.6
+    volume: 0.8
     pitch: 0.8
     loop: 0
     source: {fileID: 0}

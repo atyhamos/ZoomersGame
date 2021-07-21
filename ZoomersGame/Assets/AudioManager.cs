@@ -10,6 +10,8 @@ public class AudioManager : MonoBehaviour
 
     public Sound currentBgm;
 
+    private bool bgmOn = true, soundEffectsOn = true;
+
     // Start is called before the first frame update
     void Awake()
     {
@@ -32,10 +34,37 @@ public class AudioManager : MonoBehaviour
         }
     }
 
+    public bool BGMOn()
+    {
+        return bgmOn;
+    }
+
+    public bool FXOn()
+    {
+        return soundEffectsOn;
+    }
     private void Start()
     {
         currentBgm = Play("Main Menu");
     }
+
+    public void ToggleBGM()
+    {
+        bgmOn = !bgmOn;
+        if (!bgmOn)
+            currentBgm.source.mute = true;
+        else
+            currentBgm.source.mute = false;
+        Debug.Log("Toggle BGM to " + bgmOn.ToString());
+    }
+
+    public void ToggleFX()
+    {
+        soundEffectsOn = !soundEffectsOn;
+        Debug.Log("Toggle FX to " + soundEffectsOn.ToString());
+
+    }
+
 
     public Sound Play(string name)
     {
@@ -46,19 +75,39 @@ public class AudioManager : MonoBehaviour
             return null;
         }
         s.source.Play();
+        if (!soundEffectsOn)
+            s.source.mute = true;
+        else
+            s.source.mute = false;
         return s;
     }
 
     public void Click()
     {
         Debug.Log("clicked!");
-        Play("Click");
+        if (soundEffectsOn)
+            Play("Click");
     }
 
     public void ButtonPress()
     {
         Debug.Log("button press!");
-        Play("Button Press");
+        if (soundEffectsOn)
+            Play("Button Press");
+    }
+
+    public void MenuOpen()
+    {
+        Debug.Log("open menu!");
+        if (soundEffectsOn)
+            Play("Menu Open");
+    }
+
+    public void MenuClose()
+    {
+        Debug.Log("close menu!");
+        if (soundEffectsOn)
+            Play("Menu Close");
     }
 
     public void Clear()
@@ -71,29 +120,49 @@ public class AudioManager : MonoBehaviour
     {
         Clear();
         currentBgm = Play("Holding Area");
+        if (!bgmOn)
+            currentBgm.source.mute = true;
+        else
+            currentBgm.source.mute = false;
     }
 
     public void Main()
     {
         Clear();
         currentBgm = Play("Main Menu");
+        if (!bgmOn)
+            currentBgm.source.mute = true;
+        else
+            currentBgm.source.mute = false;
     }
 
     public void Tutorial()
     {
         Clear();
         currentBgm = Play("Tutorial");
+        if (!bgmOn)
+            currentBgm.source.mute = true;
+        else
+            currentBgm.source.mute = false;
     }
 
     public void Race()
     {
         Clear();
         currentBgm = Play("Race");
+        if (!bgmOn)
+            currentBgm.source.mute = true;
+        else
+            currentBgm.source.mute = false;
     }
 
     public void GameWin()
     {
         Clear();
         currentBgm = Play("Game Win");
+        if (!bgmOn)
+            currentBgm.source.mute = true;
+        else
+            currentBgm.source.mute = false;
     }
 }

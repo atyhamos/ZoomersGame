@@ -167,14 +167,14 @@ public class MultiplayerController : MonoBehaviour
     }
 
     [PunRPC]
-    private void UpdateRulesRPC(int winsNeeded, bool isJustJoined)
+    private void UpdateRulesRPC(int winsNeeded, int mapIndex, bool isJustJoined)
     {
-        Manager.UpdateRules(winsNeeded, isJustJoined);
+        Manager.UpdateRules(winsNeeded, mapIndex, isJustJoined);
     }
 
-    public void UpdateRules(int winsNeeded, bool isJustJoined)
+    public void UpdateRules(int winsNeeded, int mapIndex, bool isJustJoined)
     {
-        view.RPC("UpdateRulesRPC", RpcTarget.AllBuffered, winsNeeded, isJustJoined);
+        view.RPC("UpdateRulesRPC", RpcTarget.AllBuffered, winsNeeded, mapIndex, isJustJoined);
     }
 
     [PunRPC]
@@ -392,7 +392,7 @@ public class MultiplayerController : MonoBehaviour
     {
         Manager.UpdatePlayerScores();
         Manager.JoinNonHostMessage();
-        UpdateRules(Manager.winsNeeded, true);
+        UpdateRules(Manager.winsNeeded, Manager.mapIndex, true);
     }
 
     

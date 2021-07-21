@@ -9,22 +9,23 @@ using Photon.Realtime;
 
 public class MultiplayerManager : MonoBehaviourPunCallbacks
 {
-    public float minX, maxX, minY, maxY;
+    public Transform map1Spawn, map2Spawn;
     [SerializeField] private Text PingText;
     [SerializeField] private GameObject PlayerPrefab;
-    [SerializeField] private GameObject rejoinUI, loseUI, startUI, readyUI, winUI, rulesUI, winnerUI, skinsUI, skinsButton, countdown;
-    [SerializeField] private Transform spawnLocation;
-    [SerializeField] private Text playerCount, players, winCount, winnerScreen, debugStuff, hostMessage, nonhostMessage;
+    [SerializeField] private GameObject rejoinUI, loseUI, startUI, readyUI, winUI, rulesUI, winnerUI, skinsUI, skinsButton, menuUI, menuButton, countdown;
+    [SerializeField] private Transform lobbySpawnLocation;
+    [SerializeField] private Text playerCount, players, rules, winnerScreen, debugStuff, hostMessage, nonhostMessage;
     [SerializeField] private GameObject loadingUI, holdingArea;
     [SerializeField] private Text countdownText;
     [SerializeField] private GameObject Checkpoints;
     [SerializeField] private TMP_InputField winsInput;
-    public int winsNeeded = 5;
+    public Toggle bgmToggle, soundFXToggle;
+    public int winsNeeded = 5, mapIndex = 0;
     public string winnerName;
     public Button startButton;
     public Button readyButton;
     private Player[] playerList;
-    private Vector2 randomPosition, respawnLocation;
+    private Vector2 spawnPosition, respawnLocation;
     private string roomCode, playersNotReady;
     private MultiplayerController player;
     private int pingUpdate = 1; // 1 second
@@ -34,7 +35,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     private float countdownUntil = 3f;
     public bool inLobby, allPrepared = false;
     public MultiplayerController leadPlayer;
-    private bool rulesOpen, skinsOpen;
+    private bool rulesOpen, skinsOpen, menuOpen;
     private PhotonView view;
     public RuntimeAnimatorController skin;
     private int skinIndex;
@@ -58,15 +59,33 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         isRacing = false;
         if (!player.isHost)
             player.GetMasterData();
+        if (!AudioManager.instance.BGMOn())
+        {
+            bgmToggle.isOn = false;
+            AudioManager.instance.ToggleBGM();
+        }
+        if (!AudioManager.instance.FXOn())
+        {
+            soundFXToggle.isOn = false;
+            AudioManager.instance.ToggleFX();
+        }
 
     }
     public void SpawnPlayer()
     {
-        randomPosition = new Vector2(Random.Range(minX, maxX), Random.Range(minY, maxY));
-        player = PhotonNetwork.Instantiate(PlayerPrefab.name, spawnLocation.position, Quaternion.identity).gameObject.GetComponent<MultiplayerController>();
+        spawnPosition = map1Spawn.position;
+        player = PhotonNetwork.Instantiate(PlayerPrefab.name, lobbySpawnLocation.position, Quaternion.identity).gameObject.GetComponent<MultiplayerController>();
         view = GetComponent<PhotonView>();
     }
+    public void ToggleBGM()
+    {
+        AudioManager.instance.ToggleBGM();
+    }
 
+    public void ToggleFX()
+    {
+        AudioManager.instance.ToggleFX();
+    }
     private void Update()
     {
         if (PhotonNetwork.NetworkingClient == null || player == null)
@@ -181,7 +200,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         loadingUI.SetActive(true);
         player.Load();
         Checkpoints.SetActive(false); // to prevent accidental crossing of checkpoints
-        player.transform.position = randomPosition;
+        player.transform.position = spawnPosition;
         player.StopMoving();
         player.HideAllButtons();
         startUI.SetActive(false);
@@ -218,14 +237,14 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         winsInput.text = "";
         if (!rulesOpen)
         {
-            AudioManager.instance.Play("Menu Open");
+            AudioManager.instance.MenuOpen();
             player.StopMoving();
             player.HideAllButtons();
             rulesUI.SetActive(true);
         }
         else
         {
-            AudioManager.instance.Play("Menu Close");
+            AudioManager.instance.MenuClose();
             player.EnableButtons();
             rulesUI.SetActive(false);
         }
@@ -235,17 +254,29 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     public void SubmitRules()
     {
         AudioManager.instance.ButtonPress();
-        UpdateRules(int.Parse(winsInput.text), false);
+        UpdateRules(int.Parse(winsInput.text), mapIndex, false);
         player.EnableButtons();
         rulesUI.SetActive(false);
         rulesOpen = !rulesOpen;
-        player.UpdateRules(winsNeeded, false);
+        player.UpdateRules(winsNeeded, mapIndex, false);
     }
 
-    public void UpdateRules(int wins, bool isJustJoined)
+    public void UpdateRules(int wins, int mapIndex, bool isJustJoined)
     {
         winsNeeded = wins;
-        winCount.text = $"First to {winsNeeded} wins";
+        rules.text = $"First to {winsNeeded} wins\n";
+        if (mapIndex == 0)
+        {
+            Debug.Log("Update Industrial city");
+            rules.text += "Map: Purple City";
+            spawnPosition = map1Spawn.position;
+        }
+        else
+        {
+            Debug.Log("Update Grassy Hills");
+            rules.text += "Map: Grassy Hills";
+            spawnPosition = map2Spawn.position;
+        }
         foreach (MultiplayerController player in racersArray)
         {
             if (!player.isHost)
@@ -362,7 +393,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         yield return new WaitForSeconds(5f);
         winnerUI.SetActive(false);
         loadingUI.SetActive(true);
-        player.transform.position =  spawnLocation.position;
+        player.transform.position =  lobbySpawnLocation.position;
         while (player.isLoading)
             yield return null;
         loadingUI.SetActive(false);
@@ -534,15 +565,31 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     {
         if (skinsOpen)
         {
-            AudioManager.instance.Play("Menu Open");
+            AudioManager.instance.MenuOpen();
             skinsUI.SetActive(false);
         }
         else
         {
-            AudioManager.instance.Play("Menu Close");
+            AudioManager.instance.MenuClose();
             skinsUI.SetActive(true);
         }
         skinsOpen = !skinsOpen;
+    }
+
+
+    public void ShowHideMenu()
+    {
+        if (menuOpen)
+        {
+            AudioManager.instance.MenuOpen();
+            menuUI.SetActive(false);
+        }
+        else
+        {
+            AudioManager.instance.MenuClose();
+            menuUI.SetActive(true);
+        }
+        menuOpen = !menuOpen;
     }
 
     public void Click()
@@ -590,5 +637,17 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         player.ChangeSkin(4);
     }
 
+    public void ChangeMap1()
+    {
+        AudioManager.instance.ButtonPress();
+        Debug.Log("Chosen Map 1!");
+        mapIndex = 0;
+    }
 
+    public void ChangeMap2()
+    {
+        AudioManager.instance.ButtonPress();
+        Debug.Log("Chosen Map 2!");
+        mapIndex = 1;
+    }
 }
