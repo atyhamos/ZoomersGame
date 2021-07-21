@@ -105,6 +105,8 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         if (inLobby)
         {
             countdown.SetActive(false);
+            loseUI.SetActive(false);
+            player.HideWings();
             if (player.isHost)
             {
                 if (PlayerCount() == 1)
@@ -254,7 +256,10 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     public void SubmitRules()
     {
         AudioManager.instance.ButtonPress();
-        UpdateRules(int.Parse(winsInput.text), mapIndex, false);
+        if (winsInput.text != "")
+            UpdateRules(int.Parse(winsInput.text), mapIndex, false);
+        else
+            UpdateRules(winsNeeded, mapIndex, false);
         player.EnableButtons();
         rulesUI.SetActive(false);
         rulesOpen = !rulesOpen;
@@ -527,7 +532,12 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         StartCoroutine(UpdateTask());
         Debug.Log("Player " + otherPlayer.ToString() + " has left. Updating players...");
         playerCount.text = $"Number of players: {PlayerCount()}";
-        
+        if (PlayerCount() == 1 && AllAtMap())
+        {
+            Debug.Log("Win by default");
+            player.ShowWinner(player.PlayerNameText.text);
+        }
+
     }
 
     

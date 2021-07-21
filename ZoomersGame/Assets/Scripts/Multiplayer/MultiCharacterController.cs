@@ -298,22 +298,23 @@ public class MultiCharacterController : MonoBehaviour
 
 		if (collision.CompareTag("Checkpoint"))
         {
+			Checkpoint check = collision.GetComponent<Checkpoint>();
 			if (player.currentCheckpoint == null
-				&& collision.GetComponent<Checkpoint>() == GameObject.Find("Checkpoint 0").GetComponent<Checkpoint>())
+				&& (check == GameObject.Find("Checkpoint 0").GetComponent<Checkpoint>() || check == GameObject.Find("Checkpoint 01").GetComponent<Checkpoint>()))
             {
 				Debug.Log("Crossed first checkpoint!");
-				player.currentCheckpoint = collision.GetComponent<Checkpoint>();
+				player.currentCheckpoint = check;
 				player.CrossCheckpoint(player.currentCheckpoint, true);
 				return;
 			}
-			else if (player.currentCheckpoint.Next() == collision.GetComponent<Checkpoint>()) // Correct checkpoint
+			else if (player.currentCheckpoint.Next() == check) // Correct checkpoint
             {
 				Debug.Log("Crossed correct checkpoint!");
 				player.currentCheckpoint = player.currentCheckpoint.Next();
 				player.CrossCheckpoint(player.currentCheckpoint, true);
 				return;
             }
-			else if (player.currentCheckpoint.Previous() == collision.GetComponent<Checkpoint>()) // Backward checkpoint
+			else if (player.currentCheckpoint.Previous() == check) // Backward checkpoint
 			{
 				Debug.Log("You're going backwards! (Crossed a previous checkpoint)");
 				player.currentCheckpoint = player.currentCheckpoint.Previous();
