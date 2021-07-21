@@ -20,7 +20,7 @@ public class TutorialPanels : MonoBehaviour
         collided = false;
         PopupPanelAnim = Panel.GetComponent<Animator>();
         PopupTextAnim = Text.GetComponent<Animator>();
-    }
+    }   
     public void DisplayText()
     {
         PopUpPanel.SetActive(true);

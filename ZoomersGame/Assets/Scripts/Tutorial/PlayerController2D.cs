@@ -80,6 +80,8 @@ public class PlayerController2D : MonoBehaviour
         GameManager.instance.ChangeScene(3);
     }
 
+   
+
     private void Update()
     {
         moveLeft = moveLeft || Input.GetButtonDown("Left");

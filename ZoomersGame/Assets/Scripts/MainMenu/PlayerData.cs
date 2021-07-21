@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Firebase.Auth;
 using Firebase.Database;
+using TMPro;
+using UnityEngine.UI;
 
 public class PlayerData : MonoBehaviour
 {
@@ -13,8 +15,11 @@ public class PlayerData : MonoBehaviour
     public string leaderTime;
     public string leaderName;
     public bool loading, isPaused = false;
-    
+    public List<string> friendList, friendRequestList;
+    public TMP_InputField friendNameInput;
+    public Text addFriendMessage;
     [SerializeField] private GameObject scoreElement;
+    [SerializeField] private GameObject friendElement;
     public FirebaseUser user;
     public DatabaseReference DBreference;
 
@@ -81,11 +86,149 @@ public class PlayerData : MonoBehaviour
             bestTime = snapshot.Child("singleplayer formatted").Value.ToString();
             bestRawTime = (float)(double)snapshot.Child("singleplayer raw").GetValue(false);
             alreadyInMatch = bool.Parse(snapshot.Child("in match").Value.ToString());
+            foreach (DataSnapshot child in snapshot.Child("friends").Children)
+            {
+                // is a friend
+                if ((bool)child.Value)
+                    StartCoroutine(CheckMutualFriends(child.Key));
+                else
+                    friendRequestList.Add(child.Key);
+            }
             loading = false;
         }
     }
 
+    public IEnumerator CheckMutualFriends(string userId)
+    {
+        var DBTask = DBreference.Child("users").Child(userId).GetValueAsync();
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
 
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        else
+        {
+            DataSnapshot snapshot = DBTask.Result;
+            foreach (DataSnapshot child in snapshot.Child("friends").Children)
+            {
+                if (child.Key == user.UserId && (bool)child.Value)
+                {
+                    Debug.Log("Mutual Friends!");
+                    friendList.Add(child.Key);
+                    continue;
+                }
+                Debug.Log("Not mutual friends");
+            }
+        }
+    }
+
+    private IEnumerator LoadFriendData(string userId)
+    {
+        var DBTask = DBreference.Child("users").Child(userId).GetValueAsync();
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        else
+        {
+            Debug.Log("Saving friend data!");
+            DataSnapshot snapshot = DBTask.Result;
+            string username = snapshot.Child("username").Value.ToString();
+            string status = snapshot.Child("status").Value.ToString();
+            GameObject friendlistElement = Instantiate(friendElement, MenuUIManager.instance.friendsContent);
+            friendlistElement.GetComponent<FriendElement>().NewFriendElement(username, status);
+        }
+    }
+
+    private IEnumerator LoadFriendReqData(string userId)
+    {
+        var DBTask = DBreference.Child("users").Child(userId).GetValueAsync();
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        else
+        {
+            Debug.Log("Saving friend request data!");
+            DataSnapshot snapshot = DBTask.Result;
+            string username = snapshot.Child("username").Value.ToString();
+            string status = snapshot.Child("status").Value.ToString();
+            GameObject friendlistElement = Instantiate(friendElement, MenuUIManager.instance.friendsContent);
+            friendlistElement.GetComponent<FriendElement>().NewFriendReqElement(username, status);
+        }
+    }
+
+    public void Accept(string _username)
+    {
+        StartCoroutine(FriendRequestAction(_username, true));
+    }
+
+    public void Reject(string _username)
+    {
+        StartCoroutine(FriendRequestAction(_username, false));
+    }
+
+    private IEnumerator FriendRequestAction(string _username, bool accepted)
+    {
+        var FindNameTask = DBreference.Child("users").GetValueAsync();
+
+        yield return new WaitUntil(predicate: () => FindNameTask.IsCompleted);
+
+        if (FindNameTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {FindNameTask.Exception}");
+        }
+        else
+        {
+            DataSnapshot snapshot = FindNameTask.Result;
+            foreach (DataSnapshot childSnapshot in snapshot.Children)
+            {
+                if (_username == childSnapshot.Child("username").GetValue(false).ToString())
+                {
+                    if (!accepted)
+                    {
+                        var RemoveTask = DBreference.Child("users").Child(childSnapshot.Key).Child("friends").Child(user.UserId).RemoveValueAsync();
+                        yield return new WaitUntil(predicate: () => RemoveTask.IsCompleted);
+
+                        if (RemoveTask.Exception != null)
+                        {
+                            Debug.LogWarning(message: $"Failed to register task with {RemoveTask.Exception}");
+                            yield break;
+                        }
+                        RemoveTask = DBreference.Child("users").Child(user.UserId).Child("friends").Child(childSnapshot.Key).RemoveValueAsync();
+                        yield return new WaitUntil(predicate: () => RemoveTask.IsCompleted);
+
+                        if (RemoveTask.Exception != null)
+                        {
+                            Debug.LogWarning(message: $"Failed to register task with {RemoveTask.Exception}");
+                            yield break;
+                        }
+                        Debug.Log("Removed friend request");
+                    }
+                    else
+                    {
+                        var AcceptTask = DBreference.Child("users").Child(user.UserId).Child("friends").Child(childSnapshot.Key).SetValueAsync(true);
+                        yield return new WaitUntil(predicate: () => AcceptTask.IsCompleted);
+
+                        if (AcceptTask.Exception != null)
+                        {
+                            Debug.LogWarning(message: $"Failed to register task with {AcceptTask.Exception}");
+                            yield break;
+                        }
+                        Debug.Log("Successfully accepted friend request");
+                    }
+                    friendRequestList.Remove(childSnapshot.Key);
+                    friendList.Add(childSnapshot.Key);
+                    LoadFriends();
+                }
+            }
+        }
+    }
     private IEnumerator LoadLeaderData()
     {
         var DBTask = DBreference.Child("users").OrderByChild("singleplayer raw").GetValueAsync();
@@ -102,10 +245,6 @@ public class PlayerData : MonoBehaviour
             float leaderRaw = float.MaxValue;
             foreach (DataSnapshot childSnapshot in snapshot.Children)
             {
-                //leaderRaw = (float)(double)childSnapshot.Child("singleplayer raw").GetValue(false);
-                //leaderName = childSnapshot.Child("username").Value.ToString();
-                //leaderTime = childSnapshot.Child("singleplayer formatted").Value.ToString();
-                //break;
                 float childRaw = (float)(double)childSnapshot.Child("singleplayer raw").GetValue(false);
                 if (childRaw < leaderRaw)
                 {
@@ -192,6 +331,22 @@ public class PlayerData : MonoBehaviour
         StartCoroutine(LoadScoreboardData());
     }
 
+    public void LoadFriends()
+    {
+        foreach (Transform child in MenuUIManager.instance.friendsContent.transform)
+        {
+            Destroy(child.gameObject);
+        }
+        foreach (string friendReq in friendRequestList)
+        {
+            StartCoroutine(LoadFriendReqData(friendReq));
+        }
+        foreach (string friend in friendList)
+        {
+            StartCoroutine(LoadFriendData(friend));
+        }
+    }
+
     private void OnApplicationQuit()
     {
         Debug.Log("Application closing...");
@@ -230,6 +385,81 @@ public class PlayerData : MonoBehaviour
             {
                 Debug.Log("lose focus");
                 UpdateInMatch(false);
+            }
+        }
+    }
+
+    public void SubmitFriendRequest()
+    {
+        AudioManager.instance.ButtonPress();
+        if (friendNameInput.text.Length < 4)
+        {
+            addFriendMessage.text = "Name is too short";
+            return;
+        }
+        StartCoroutine(FriendRequestTask(friendNameInput.text));
+    }
+
+    private IEnumerator FriendRequestTask(string username)
+    {
+        var DBTask = DBreference.Child("users").OrderByChild("username").GetValueAsync();
+
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        else
+        {
+            DataSnapshot snapshot = DBTask.Result;
+            foreach (DataSnapshot childSnapshot in snapshot.Children)
+            {
+                if (username == childSnapshot.Child("username").GetValue(false).ToString())
+                {
+                    Debug.Log("Name exists in database!");
+                    if (friendList.Contains(childSnapshot.Key))
+                    {
+                        Debug.Log("Already friends");
+                        addFriendMessage.text = "You are already friends";
+                        yield break;
+                    }
+                    else
+                    {
+                        foreach (DataSnapshot friend in childSnapshot.Child("friends").Children)
+                        {
+                            if (friend.Key == user.UserId && !(bool)friend.Value)
+                            {
+                                Debug.Log("User has not accepted your friend request yet");
+                                addFriendMessage.text = "User has yet to accept your friend request";
+                                yield break;
+                            }
+                        }
+                        Debug.Log("Not friends. Sending request now");
+                        addFriendMessage.text = "Sending friend request...";
+                        var friendRequestTask = DBreference.Child("users").Child(childSnapshot.Key).Child("friends").Child(user.UserId).SetValueAsync(false);
+                        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+                        if (friendRequestTask.Exception != null)
+                        {
+                            loading = false;
+                            Debug.LogWarning(message: $"Failed to register task with {friendRequestTask.Exception}");
+                        }
+                        Debug.Log("Friend request has been sent");
+                        addFriendMessage.text = "Friend request sent";
+
+                        var UpdatetTask = DBreference.Child("users").Child(user.UserId).Child("friends").Child(childSnapshot.Key).SetValueAsync(true);
+                        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+                        if (friendRequestTask.Exception != null)
+                        {
+                            loading = false;
+                            Debug.LogWarning(message: $"Failed to register task with {friendRequestTask.Exception}");
+                        }
+                        Debug.Log("Added to own friends list");
+                        yield break;
+                    }
+                }
+                Debug.Log("Player does not exist");
+                addFriendMessage.text = "Player does not exist";
             }
         }
     }
