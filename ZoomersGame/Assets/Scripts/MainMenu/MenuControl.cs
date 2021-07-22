@@ -66,6 +66,7 @@ public class MenuControl : MonoBehaviourPunCallbacks
             FirebaseManager.instance.auth.SignOut();
 
         PhotonNetwork.Disconnect();
+        Destroy(PlayerData.instance);
     }
 
     public override void OnDisconnected(DisconnectCause cause)

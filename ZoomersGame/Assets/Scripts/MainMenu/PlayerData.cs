@@ -22,6 +22,7 @@ public class PlayerData : MonoBehaviour
     [SerializeField] private GameObject friendElement;
     public FirebaseUser user;
     public DatabaseReference DBreference;
+    public int totalInstances;
 
     private void Awake()
     {
@@ -46,6 +47,7 @@ public class PlayerData : MonoBehaviour
         }
         StartCoroutine(LoadUserData());
         StartCoroutine(LoadLeaderData());
+        StartCoroutine(UpdateStatus(true));
     }
 
     private IEnumerator LoadUserData()
@@ -86,6 +88,7 @@ public class PlayerData : MonoBehaviour
             bestTime = snapshot.Child("singleplayer formatted").Value.ToString();
             bestRawTime = (float)(double)snapshot.Child("singleplayer raw").GetValue(false);
             alreadyInMatch = bool.Parse(snapshot.Child("in match").Value.ToString());
+            totalInstances = int.Parse(snapshot.Child("instances").Value.ToString());
             foreach (DataSnapshot child in snapshot.Child("friends").Children)
             {
                 // is a friend
@@ -115,7 +118,7 @@ public class PlayerData : MonoBehaviour
                 if (child.Key == user.UserId && (bool)child.Value)
                 {
                     Debug.Log("Mutual Friends!");
-                    friendList.Add(child.Key);
+                    friendList.Add(userId);
                     continue;
                 }
                 Debug.Log("Not mutual friends");
@@ -137,9 +140,9 @@ public class PlayerData : MonoBehaviour
             Debug.Log("Saving friend data!");
             DataSnapshot snapshot = DBTask.Result;
             string username = snapshot.Child("username").Value.ToString();
-            string status = snapshot.Child("status").Value.ToString();
+            int instances = int.Parse(snapshot.Child("instances").Value.ToString());
             GameObject friendlistElement = Instantiate(friendElement, MenuUIManager.instance.friendsContent);
-            friendlistElement.GetComponent<FriendElement>().NewFriendElement(username, status);
+            friendlistElement.GetComponent<FriendElement>().NewFriendElement(username, instances == 0 ? "Offline" : "Online");
         }
     }
 
@@ -157,9 +160,9 @@ public class PlayerData : MonoBehaviour
             Debug.Log("Saving friend request data!");
             DataSnapshot snapshot = DBTask.Result;
             string username = snapshot.Child("username").Value.ToString();
-            string status = snapshot.Child("status").Value.ToString();
+            int instances = int.Parse(snapshot.Child("instances").Value.ToString());
             GameObject friendlistElement = Instantiate(friendElement, MenuUIManager.instance.friendsContent);
-            friendlistElement.GetComponent<FriendElement>().NewFriendReqElement(username, status);
+            friendlistElement.GetComponent<FriendElement>().NewFriendReqElement(username, instances == 0 ? "Offline" : "Online");
         }
     }
 
@@ -229,6 +232,64 @@ public class PlayerData : MonoBehaviour
             }
         }
     }
+
+    private IEnumerator UpdateStatus(bool online)
+    {
+     //   Debug.Log("Updating status!!!");
+     //   var GetInstancesTask = DBreference.Child("users").Child(user.UserId).Child("instances").GetValueAsync();
+     //   yield return new WaitUntil(predicate: () => GetInstancesTask.IsCompleted);
+     //   if (GetInstancesTask.Exception != null)
+     //   {
+     //       Debug.LogWarning(message: $"Failed to register task with {GetInstancesTask.Exception}");
+     //   }
+     //   else
+     //   {
+     //       totalInstances = int.Parse(GetInstancesTask.Result.Value.ToString());
+        int statusUpdate = online ? 1 : -1;
+        totalInstances =  Mathf.Max(0, totalInstances + statusUpdate);
+        var UpdateInstancesTask = DBreference.Child("users").Child(user.UserId).Child("instances").SetValueAsync(Mathf.Max(0, totalInstances));
+        yield return new WaitUntil(predicate: () => UpdateInstancesTask.IsCompleted);
+        if (UpdateInstancesTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {UpdateInstancesTask.Exception}");
+        }
+        else
+        {
+            Debug.Log("Updated instances!");
+        }
+            //if (online)
+            //{
+            //    var DBTask = DBreference.Child("users").Child(user.UserId).Child("status").SetValueAsync("Online");
+            //    yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+            //    if (DBTask.Exception != null)
+            //    {
+            //        Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+            //    }
+            //    else
+            //    {
+            //        Debug.Log("Set to Online!");
+            //    }            
+            //}
+            //else
+            //{
+            //    if (totalInstances == 0)
+            //    {
+            //        var DBTask = DBreference.Child("users").Child(user.UserId).Child("status").SetValueAsync("Offline");
+            //        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+            //        if (DBTask.Exception != null)
+            //        {
+            //            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+            //        }
+            //        else
+            //        {
+            //            Debug.Log("Set to Offline!");
+            //        }
+            //    }
+            //}
+            //LoadFriends();
+        //}
+    }
+
     private IEnumerator LoadLeaderData()
     {
         var DBTask = DBreference.Child("users").OrderByChild("singleplayer raw").GetValueAsync();
@@ -349,9 +410,13 @@ public class PlayerData : MonoBehaviour
 
     private void OnApplicationQuit()
     {
+
         Debug.Log("Application closing...");
         if (inMatch)
+        {
+            Debug.Log("Update on application quit");
             UpdateInMatch(false);
+        }
     }
 
     private void OnDestroy()
@@ -365,28 +430,19 @@ public class PlayerData : MonoBehaviour
 
     private void OnApplicationPause(bool pause)
     {
-        if (inMatch)
-        {
-            Debug.Log("pause");
-            UpdateInMatch(false);
-        }
+       // StartCoroutine(UpdateStatus(false));
+       // if (inMatch)
+       // {
+       //     Debug.Log("pause");
+       //     //UpdateInMatch(false);
+       // }
     }
 
     private void OnApplicationFocus(bool focus)
     {
+        StartCoroutine(UpdateStatus(focus));
         if (inMatch)
-        {
-            if (focus)
-            {
-                Debug.Log("focus");
-                UpdateInMatch(true);
-            }
-            else
-            {
-                Debug.Log("lose focus");
-                UpdateInMatch(false);
-            }
-        }
+            UpdateInMatch(focus);
     }
 
     public void SubmitFriendRequest()
@@ -438,7 +494,7 @@ public class PlayerData : MonoBehaviour
                         Debug.Log("Not friends. Sending request now");
                         addFriendMessage.text = "Sending friend request...";
                         var friendRequestTask = DBreference.Child("users").Child(childSnapshot.Key).Child("friends").Child(user.UserId).SetValueAsync(false);
-                        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+                        yield return new WaitUntil(predicate: () => friendRequestTask.IsCompleted);
                         if (friendRequestTask.Exception != null)
                         {
                             loading = false;
@@ -447,12 +503,12 @@ public class PlayerData : MonoBehaviour
                         Debug.Log("Friend request has been sent");
                         addFriendMessage.text = "Friend request sent";
 
-                        var UpdatetTask = DBreference.Child("users").Child(user.UserId).Child("friends").Child(childSnapshot.Key).SetValueAsync(true);
-                        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
-                        if (friendRequestTask.Exception != null)
+                        var UpdateTask = DBreference.Child("users").Child(user.UserId).Child("friends").Child(childSnapshot.Key).SetValueAsync(true);
+                        yield return new WaitUntil(predicate: () => UpdateTask.IsCompleted);
+                        if (UpdateTask.Exception != null)
                         {
                             loading = false;
-                            Debug.LogWarning(message: $"Failed to register task with {friendRequestTask.Exception}");
+                            Debug.LogWarning(message: $"Failed to register task with {UpdateTask.Exception}");
                         }
                         Debug.Log("Added to own friends list");
                         yield break;
