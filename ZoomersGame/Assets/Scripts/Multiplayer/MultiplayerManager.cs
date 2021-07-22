@@ -11,8 +11,8 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
 {
     public Transform map1Spawn, map2Spawn;
     [SerializeField] private Text PingText;
-    [SerializeField] private GameObject PlayerPrefab;
-    [SerializeField] private GameObject rejoinUI, loseUI, startUI, readyUI, winUI, rulesUI, winnerUI, skinsUI, skinsButton, menuUI, menuButton, countdown;
+    [SerializeField] private GameObject PlayerPrefab, PlayerElement;
+    [SerializeField] private GameObject rejoinUI, loseUI, startUI, readyUI, winUI, rulesUI, winnerUI, skinsUI, skinsButton, friendsButton, menuUI, menuButton, countdown;
     [SerializeField] private Transform lobbySpawnLocation;
     [SerializeField] private Text playerCount, players, rules, winnerScreen, debugStuff, hostMessage, nonhostMessage;
     [SerializeField] private GameObject loadingUI, holdingArea;
@@ -209,6 +209,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         readyUI.SetActive(false);
         skinsOpen = false;
         skinsButton.SetActive(false);
+        friendsButton.SetActive(false);
         skinsUI.SetActive(false);
         //while (!AllLoaded())
         //    yield return null;
@@ -346,6 +347,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         readyUI.SetActive(false);
         startUI.SetActive(true);
         skinsButton.SetActive(true);
+        friendsButton.SetActive(true);
         player.isReady = true;
         rulesOpen = false;
         skinsOpen = false;
@@ -357,6 +359,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         startUI.SetActive(false);
         readyUI.SetActive(true);
         skinsButton.SetActive(true);
+        friendsButton.SetActive(true);
         skinsOpen = false;
     }
 
@@ -443,9 +446,10 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     public void RejoinButton()
     {
         rejoinUI.SetActive(false);
-        GameManager.instance.rejoinCode = roomCode;
+        //GameManager.instance.rejoinCode = roomCode;
+        PhotonNetwork.Disconnect();
         CreateAndJoinRoom.instance.LeaveRoom();
-        SceneManager.LoadSceneAsync("Loading"); 
+        SceneManager.LoadSceneAsync("Splash"); 
     }
 
     public void RankRacers()
@@ -659,5 +663,19 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         AudioManager.instance.ButtonPress();
         Debug.Log("Chosen Map 2!");
         mapIndex = 1;
+    }
+
+    public void LoadPlayerList(Transform content)
+    {
+        foreach (Player player in playerList)
+        {
+            if (player.NickName == PhotonNetwork.NickName)
+                continue;
+            GameObject playerListElement = Instantiate(PlayerElement, content.transform);
+            if (PlayerData.instance.friendNameList.Contains(player.NickName))
+                playerListElement.GetComponent<PlayerElement>().NewFriendElement(player.NickName);
+            else
+                playerListElement.GetComponent<PlayerElement>().NewPlayerElement(player.NickName);
+        }    
     }
 }

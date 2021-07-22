@@ -32,6 +32,7 @@ public class MultiCharacterController : MonoBehaviour
 	float accelRatePerSec;
 	float forwardVelocity;
 	public Transform trapPlacement;
+	public Transform particles;
 
 	[System.Serializable]
 	public class BoolEvent : UnityEvent<bool> { }

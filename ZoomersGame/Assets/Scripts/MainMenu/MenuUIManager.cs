@@ -13,12 +13,13 @@ public class MenuUIManager : MonoBehaviour
     [SerializeField] private GameObject CreateUI;
     [SerializeField] private GameObject JoinUI;
     [SerializeField] private GameObject menuUI;
-    [SerializeField] private GameObject friendsUI;
-    [SerializeField] private GameObject addFriendsUI;
     [SerializeField] private GameObject menuButton;
+    [SerializeField] private GameObject RandomUI;
+
+
     public Toggle bgmToggle, soundFXToggle;
-    public bool menuOpen, friendsOpen, addFriendsOpen;
-    public Transform scoreboardContent, friendsContent;
+    public bool menuOpen;
+    public Transform scoreboardContent;
 
     private void Awake()
     {
@@ -49,6 +50,7 @@ public class MenuUIManager : MonoBehaviour
         CreateUI.SetActive(false);
         JoinUI.SetActive(false);
         LeaderboardUI.SetActive(false);
+        RandomUI.SetActive(false);
     }
 
     public void MainScreen()
@@ -87,6 +89,12 @@ public class MenuUIManager : MonoBehaviour
         JoinUI.SetActive(true);
     }
 
+    public void RandomScreen()
+    {
+        AudioManager.instance.ButtonPress();
+        ClearUI();
+        RandomUI.SetActive(true);
+    }
     public void ShowHideMenu()
     {
         if (menuOpen)
@@ -100,37 +108,5 @@ public class MenuUIManager : MonoBehaviour
             menuUI.SetActive(true);
         }
         menuOpen = !menuOpen;
-    }
-
-    public void ShowHideFriends()
-    {
-        if (friendsOpen)
-        {
-            AudioManager.instance.MenuClose();
-            friendsUI.SetActive(false);
-        }
-        else
-        {
-            PlayerData.instance.LoadFriends();
-            AudioManager.instance.MenuOpen();
-            friendsUI.SetActive(true);
-        }
-        friendsOpen = !friendsOpen;
-    }
-
-    public void ShowHideAddFriends()
-    {
-        if (addFriendsOpen)
-        {
-            AudioManager.instance.MenuClose();
-            addFriendsUI.SetActive(false);
-        }
-        else
-        {
-            ShowHideFriends();
-            AudioManager.instance.MenuOpen();
-            addFriendsUI.SetActive(true);
-        }
-        addFriendsOpen = !addFriendsOpen;
     }
 }

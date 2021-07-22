@@ -32,7 +32,7 @@ public class MultiplayerController : MonoBehaviour
     public MultiplayerManager Manager;
     public bool isReady, isHost, isLoading, lostRound, hasWon = false, jumpButtonDown;
     public List<RuntimeAnimatorController> skins;
-    public GameObject wings;
+    public GameObject wings, particles;
 
     private void Awake()
     {
@@ -271,12 +271,16 @@ public class MultiplayerController : MonoBehaviour
     [PunRPC]
     private void FlipTrue()
     {
+        if (!Sprite.flipX)
+            particles.transform.RotateAround(transform.position, transform.up, 180f);
         Sprite.flipX = true;
     }
 
     [PunRPC]
     private void FlipFalse()
     {
+        if (Sprite.flipX)
+            particles.transform.RotateAround(transform.position, transform.up, 180f);
         Sprite.flipX = false;
     }
 
@@ -609,6 +613,27 @@ public class MultiplayerController : MonoBehaviour
     public void ChangeSkin(int skinIndex)
     {
         view.RPC("ChangeSkinRPC", RpcTarget.AllBuffered, skinIndex);
+    }
+
+    public void EnableParticles()
+    {
+        view.RPC("EnableParticlesRPC", RpcTarget.AllBuffered);
+    }
+
+    [PunRPC]
+    private void EnableParticlesRPC()
+    {
+        particles.SetActive(true);
+    }
+    public void DisableParticles()
+    {
+        view.RPC("DisableParticlesRPC", RpcTarget.AllBuffered);
+    }
+
+    [PunRPC]
+    private void DisableParticlesRPC()
+    {
+        particles.SetActive(false);
     }
     private void FixedUpdate()
     {

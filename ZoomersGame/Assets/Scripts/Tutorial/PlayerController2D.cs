@@ -9,7 +9,7 @@ public class PlayerController2D : MonoBehaviour
     [SerializeField] Animator animator;
     [SerializeField] CharacterController2D controller;
     Rigidbody2D rb;
-    public GameObject PlayerCamera, PlayerButtons, nameBackground, wings;
+    public GameObject PlayerCamera, PlayerButtons, nameBackground, wings, particles;
     public Text PlayerNameText;
     public bool hasPowerUp, usingPowerUp;
     public PowerUp previousPowerUp, currentPowerUp;

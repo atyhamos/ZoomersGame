@@ -384,6 +384,22 @@ public class FirebaseManager : MonoBehaviour
         {
             Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
         }
+
+        DBTask = DBreference.Child("users").Child(user.UserId).Child("userID").SetValueAsync(user.UserId);
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+
+        DBTask = DBreference.Child("users").Child(user.UserId).Child("instances").SetValueAsync(0);
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
     }
 
     private IEnumerator UpdateBestTime(float _raw, string _formatted)

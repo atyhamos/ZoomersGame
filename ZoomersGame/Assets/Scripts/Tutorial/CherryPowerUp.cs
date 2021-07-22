@@ -14,6 +14,7 @@ public class CherryPowerUp : PowerUp
     public override void Consume()
     {
         AudioManager.instance.Play("Cherry");
+        this.player.particles.SetActive(true);
         Debug.Log("Consumed cherry! Boosting!");
         player.hasPowerUp = false;
         player.usingPowerUp = true;
@@ -26,6 +27,7 @@ public class CherryPowerUp : PowerUp
         controller.maxSpeed *= 1.5f;
         yield return new WaitForSeconds(boostTime);
         controller.maxSpeed /= 1.5f;
+        this.player.particles.SetActive(false);
         player.usingPowerUp = false;
     }
 
@@ -44,21 +46,7 @@ public class CherryPowerUp : PowerUp
         StopCoroutine(co);
         controller.maxSpeed /= 1.5f;
         player.usingPowerUp = false;
+        this.player.particles.SetActive(false);
     }
-
-//    private void Update()
-//    {
-//        if ()
-//        if (player.usingPowerUp && boostTime > 0)
-//            boostTime -= Time.deltaTime;
-//        else if (player.usingPowerUp && boostTime < 0)
-//        {
-//            player.usingPowerUp = false;
-//            boostTime = 5f;
-//            controller.maxSpeed /= 1.5f;
-//        }
-//        else if (!player.usingPowerUp)
-//            boostTime = 5f;
-//    }
 
 }

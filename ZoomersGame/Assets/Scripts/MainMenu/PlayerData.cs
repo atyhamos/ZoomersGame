@@ -15,14 +15,16 @@ public class PlayerData : MonoBehaviour
     public string leaderTime;
     public string leaderName;
     public bool loading, isPaused = false;
-    public List<string> friendList, friendRequestList;
+    public List<string> friendList, friendRequestList, friendNameList;
     public TMP_InputField friendNameInput;
     public Text addFriendMessage;
     [SerializeField] private GameObject scoreElement;
     [SerializeField] private GameObject friendElement;
+    [SerializeField] private GameObject invitation;
     public FirebaseUser user;
     public DatabaseReference DBreference;
     public int totalInstances;
+    public bool inviteRequest = false;
 
     private void Awake()
     {
@@ -48,6 +50,82 @@ public class PlayerData : MonoBehaviour
         StartCoroutine(LoadUserData());
         StartCoroutine(LoadLeaderData());
         StartCoroutine(UpdateStatus(true));
+        InvokeRepeating("CheckInvites", 0f, 5f);
+        InvokeRepeating("InMatch", 5f, 10f);
+    }
+
+    private void CheckInvites()
+    {
+        if (inviteRequest)
+            return;
+        else
+        {
+        if (!inMatch)
+            StartCoroutine(CheckInvitesDatabase());
+        }
+    }
+
+
+
+    private IEnumerator CheckInvitesDatabase()
+    {
+        var DBTask = DBreference.Child("users").Child(user.UserId).Child("invites").GetValueAsync();
+
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            loading = false;
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        else
+        {
+            if (DBTask.Result.Value == null)
+            {
+                Debug.Log("No invites");
+                yield break;
+            }
+            else
+            {
+                foreach (DataSnapshot child in DBTask.Result.Children)
+                {
+                    string inviteUser = child.Key;
+                    string inviteCode = child.Value.ToString();
+                    GameObject invite = Instantiate(invitation, GameObject.Find("Canvas").transform);
+                    invite.GetComponent<Invitation>().NewInvitation(inviteUser, inviteCode);
+                    Debug.Log("Got an invite!");
+                    inviteRequest = true;
+                    yield break;
+                }
+            }
+        }
+    }
+
+
+    public void InvitationAction(string username, string code, bool accepted)
+    {
+        StartCoroutine(InvitationActionDB(username, code, accepted));
+    }
+
+    private IEnumerator InvitationActionDB(string username, string code, bool accepted)
+    {
+        if (accepted)
+        {
+            CreateAndJoinRoom.instance.JoinOrCreateRoom(code);
+        }
+        var DBTask = DBreference.Child("users").Child(user.UserId).Child("invites").Child(username).RemoveValueAsync();
+
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            loading = false;
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        else
+        {
+            Debug.Log("Removed invitation");
+        }
     }
 
     private IEnumerator LoadUserData()
@@ -61,24 +139,9 @@ public class PlayerData : MonoBehaviour
             loading = false;
             Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
         }
-        else if (DBTask.Result.Value == null || DBTask.Result.ChildrenCount == 3)
+        else if (DBTask.Result.Value == null)
         {
-            // Only username, raw time and formatted time available. Create new child
-            Debug.Log("Missing in match data, updating now");
-            var UpdateDBTask = DBreference.Child("users").Child(user.UserId).Child("in match").SetValueAsync(false);
-            yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
-
-            if (UpdateDBTask.Exception != null)
-            {
-                loading = false;
-                Debug.LogWarning(message: $"Failed to register task with {UpdateDBTask.Exception}");
-            }
-            DataSnapshot snapshot = DBTask.Result;
-            bestTime = snapshot.Child("singleplayer formatted").Value.ToString();
-            bestRawTime = (float)(double)snapshot.Child("singleplayer raw").GetValue(false);
-            alreadyInMatch = false;
-            loading = false;
-            yield return null;
+            Debug.Log("User does not exist");
         }
         else
         {
@@ -89,6 +152,8 @@ public class PlayerData : MonoBehaviour
             bestRawTime = (float)(double)snapshot.Child("singleplayer raw").GetValue(false);
             alreadyInMatch = bool.Parse(snapshot.Child("in match").Value.ToString());
             totalInstances = int.Parse(snapshot.Child("instances").Value.ToString());
+            friendList.Clear();
+            friendRequestList.Clear();
             foreach (DataSnapshot child in snapshot.Child("friends").Children)
             {
                 // is a friend
@@ -98,6 +163,11 @@ public class PlayerData : MonoBehaviour
                     friendRequestList.Add(child.Key);
             }
             loading = false;
+            yield return new WaitForSeconds(2f);
+            if (!inMatch)
+                LoadFriends();
+            else
+                LoadFriendsInMatch(FriendsUIManager.instance.friendsContent);
         }
     }
 
@@ -118,7 +188,8 @@ public class PlayerData : MonoBehaviour
                 if (child.Key == user.UserId && (bool)child.Value)
                 {
                     Debug.Log("Mutual Friends!");
-                    friendList.Add(userId);
+                    if (!friendList.Contains(userId))
+                        friendList.Add(userId);
                     continue;
                 }
                 Debug.Log("Not mutual friends");
@@ -141,8 +212,45 @@ public class PlayerData : MonoBehaviour
             DataSnapshot snapshot = DBTask.Result;
             string username = snapshot.Child("username").Value.ToString();
             int instances = int.Parse(snapshot.Child("instances").Value.ToString());
-            GameObject friendlistElement = Instantiate(friendElement, MenuUIManager.instance.friendsContent);
-            friendlistElement.GetComponent<FriendElement>().NewFriendElement(username, instances == 0 ? "Offline" : "Online");
+            if (!friendNameList.Contains(username))
+                friendNameList.Add(username);
+            GameObject friendlistElement = Instantiate(friendElement, FriendsUIManager.instance.friendsContent.transform);
+            friendlistElement.GetComponent<FriendElement>().NewFriendElement(username, instances == 0 ? "Offline" : "Online", userId);
+        }
+    }
+
+    private IEnumerator LoadFriendDataInMatch(string userId, Transform content)
+    {
+        var DBTask = DBreference.Child("users").Child(userId).GetValueAsync();
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        else
+        {
+            Debug.Log("Saving friend data!");
+            DataSnapshot snapshot = DBTask.Result;
+            string username = snapshot.Child("username").Value.ToString();
+            int instances = int.Parse(snapshot.Child("instances").Value.ToString());
+            bool inMatch = bool.Parse(snapshot.Child("in match").Value.ToString());
+            GameObject friendlistElement = Instantiate(friendElement, content.transform);
+            if (instances == 0)
+            {
+                friendlistElement.GetComponent<FriendElement>().NewFriendElementInMatch(username, "Offline", userId);
+                yield break;
+            }
+            if (!inMatch)
+            {
+                friendlistElement.GetComponent<FriendElement>().NewFriendElementInMatch(username, "Online", userId);
+                yield break;
+            }
+            else
+            {
+                friendlistElement.GetComponent<FriendElement>().NewFriendElement(username, "In Match", userId);
+                yield break;
+            }
         }
     }
 
@@ -161,8 +269,8 @@ public class PlayerData : MonoBehaviour
             DataSnapshot snapshot = DBTask.Result;
             string username = snapshot.Child("username").Value.ToString();
             int instances = int.Parse(snapshot.Child("instances").Value.ToString());
-            GameObject friendlistElement = Instantiate(friendElement, MenuUIManager.instance.friendsContent);
-            friendlistElement.GetComponent<FriendElement>().NewFriendReqElement(username, instances == 0 ? "Offline" : "Online");
+            GameObject friendlistElement = Instantiate(friendElement, MenuUIManager.instance.GetComponent<FriendsUIManager>().friendsContent.transform);
+            friendlistElement.GetComponent<FriendElement>().NewFriendReqElement(username, instances == 0 ? "Offline" : "Online", userId);
         }
     }
 
@@ -212,6 +320,10 @@ public class PlayerData : MonoBehaviour
                             yield break;
                         }
                         Debug.Log("Removed friend request");
+                        Debug.Log(_username);
+                        friendRequestList.Remove(childSnapshot.Key);
+                        friendNameList.Remove(_username);
+                        LoadFriends();
                     }
                     else
                     {
@@ -224,10 +336,11 @@ public class PlayerData : MonoBehaviour
                             yield break;
                         }
                         Debug.Log("Successfully accepted friend request");
+                        friendList.Add(childSnapshot.Key);
+                        friendRequestList.Remove(childSnapshot.Key);
+                        friendNameList.Remove(_username);
+                        LoadFriends();
                     }
-                    friendRequestList.Remove(childSnapshot.Key);
-                    friendList.Add(childSnapshot.Key);
-                    LoadFriends();
                 }
             }
         }
@@ -235,18 +348,8 @@ public class PlayerData : MonoBehaviour
 
     private IEnumerator UpdateStatus(bool online)
     {
-     //   Debug.Log("Updating status!!!");
-     //   var GetInstancesTask = DBreference.Child("users").Child(user.UserId).Child("instances").GetValueAsync();
-     //   yield return new WaitUntil(predicate: () => GetInstancesTask.IsCompleted);
-     //   if (GetInstancesTask.Exception != null)
-     //   {
-     //       Debug.LogWarning(message: $"Failed to register task with {GetInstancesTask.Exception}");
-     //   }
-     //   else
-     //   {
-     //       totalInstances = int.Parse(GetInstancesTask.Result.Value.ToString());
         int statusUpdate = online ? 1 : -1;
-        totalInstances =  Mathf.Max(0, totalInstances + statusUpdate);
+        totalInstances = Mathf.Max(0, totalInstances + statusUpdate);
         var UpdateInstancesTask = DBreference.Child("users").Child(user.UserId).Child("instances").SetValueAsync(Mathf.Max(0, totalInstances));
         yield return new WaitUntil(predicate: () => UpdateInstancesTask.IsCompleted);
         if (UpdateInstancesTask.Exception != null)
@@ -257,38 +360,27 @@ public class PlayerData : MonoBehaviour
         {
             Debug.Log("Updated instances!");
         }
-            //if (online)
-            //{
-            //    var DBTask = DBreference.Child("users").Child(user.UserId).Child("status").SetValueAsync("Online");
-            //    yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
-            //    if (DBTask.Exception != null)
-            //    {
-            //        Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
-            //    }
-            //    else
-            //    {
-            //        Debug.Log("Set to Online!");
-            //    }            
-            //}
-            //else
-            //{
-            //    if (totalInstances == 0)
-            //    {
-            //        var DBTask = DBreference.Child("users").Child(user.UserId).Child("status").SetValueAsync("Offline");
-            //        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
-            //        if (DBTask.Exception != null)
-            //        {
-            //            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
-            //        }
-            //        else
-            //        {
-            //            Debug.Log("Set to Offline!");
-            //        }
-            //    }
-            //}
-            //LoadFriends();
-        //}
     }
+
+    public void InviteFriend(string username, string code)
+    {
+        StartCoroutine(InviteFriendDatabase(username, code));
+    }
+
+    private IEnumerator InviteFriendDatabase(string username, string code)
+    {
+        var DBTask = DBreference.Child("users").Child(username).Child("invites").Child(user.DisplayName).SetValueAsync(code);
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        else
+        {
+            Debug.Log("Request sent!");
+
+        }
+    } 
 
     private IEnumerator LoadLeaderData()
     {
@@ -394,17 +486,31 @@ public class PlayerData : MonoBehaviour
 
     public void LoadFriends()
     {
-        foreach (Transform child in MenuUIManager.instance.friendsContent.transform)
+        foreach (Transform child in FriendsUIManager.instance.friendsContent.transform)
         {
             Destroy(child.gameObject);
         }
         foreach (string friendReq in friendRequestList)
         {
+            Debug.Log("Loading friend requests...");
             StartCoroutine(LoadFriendReqData(friendReq));
         }
         foreach (string friend in friendList)
         {
+            Debug.Log("Loading friends...");
             StartCoroutine(LoadFriendData(friend));
+        }
+    }
+
+    public void LoadFriendsInMatch(Transform content)
+    {
+        foreach (Transform child in content.transform)
+        {
+            Destroy(child.gameObject);
+        }
+        foreach (string friend in friendList)
+        {
+            StartCoroutine(LoadFriendDataInMatch(friend, content));
         }
     }
 
@@ -428,16 +534,6 @@ public class PlayerData : MonoBehaviour
         }    
     }
 
-    private void OnApplicationPause(bool pause)
-    {
-       // StartCoroutine(UpdateStatus(false));
-       // if (inMatch)
-       // {
-       //     Debug.Log("pause");
-       //     //UpdateInMatch(false);
-       // }
-    }
-
     private void OnApplicationFocus(bool focus)
     {
         StartCoroutine(UpdateStatus(focus));
@@ -447,17 +543,36 @@ public class PlayerData : MonoBehaviour
 
     public void SubmitFriendRequest()
     {
+        if (addFriendMessage == null)
+        {
+            friendNameInput = FriendsUIManager.instance.friendNameInput;
+            addFriendMessage = FriendsUIManager.instance.addFriendMessage; 
+        }
         AudioManager.instance.ButtonPress();
         if (friendNameInput.text.Length < 4)
         {
             addFriendMessage.text = "Name is too short";
             return;
         }
+        else if (friendNameInput.text == user.DisplayName)
+        {
+            addFriendMessage.text = "You cannot add yourself";
+            return;
+        }
         StartCoroutine(FriendRequestTask(friendNameInput.text));
     }
 
+    public void SubmitFriendRequest(string username)
+    {
+        AudioManager.instance.ButtonPress();
+        StartCoroutine(FriendRequestTask(username));
+    }
+
+
     private IEnumerator FriendRequestTask(string username)
     {
+        if (addFriendMessage == null)
+            addFriendMessage = FriendsUIManager.instance.addFriendMessage;
         var DBTask = DBreference.Child("users").OrderByChild("username").GetValueAsync();
 
         yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
