@@ -21,4 +21,14 @@ public class GameManager : MonoBehaviour
     {
         SceneManager.LoadSceneAsync(_sceneIndex);
     }
+
+    public void Click()
+    {
+        AudioManager.instance.Click();
+    }
+
+    public void ButtonPress()
+    {
+        AudioManager.instance.ButtonPress();
+    }
 }

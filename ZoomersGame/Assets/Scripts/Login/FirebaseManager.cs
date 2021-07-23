@@ -134,16 +134,19 @@ public class FirebaseManager : MonoBehaviour
 
     public void LoginButton()
     {
+        AudioManager.instance.ButtonPress();
         StartCoroutine(LoginLogic(loginEmail.text, loginPassword.text));
     }
 
     public void RegisterButton()
     {
+        AudioManager.instance.ButtonPress();
         StartCoroutine(RegisterLogic(registerUsername.text, registerEmail.text, registerPassword.text, registerConfirmPassword.text));
     }
 
     public void ResetButton()
     {
+        AudioManager.instance.ButtonPress();
         StartCoroutine(ResetPasswordLogic(resetEmail.text));
     }
 
@@ -375,6 +378,22 @@ public class FirebaseManager : MonoBehaviour
         }
 
         DBTask = DBreference.Child("users").Child(user.UserId).Child("in match").SetValueAsync(false);
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+
+        DBTask = DBreference.Child("users").Child(user.UserId).Child("userID").SetValueAsync(user.UserId);
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+
+        DBTask = DBreference.Child("users").Child(user.UserId).Child("instances").SetValueAsync(0);
         yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
 
         if (DBTask.Exception != null)

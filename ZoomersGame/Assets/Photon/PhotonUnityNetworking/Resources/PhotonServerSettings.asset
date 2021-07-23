@@ -64,6 +64,12 @@ MonoBehaviour:
   - TransferOwner
   - LoseRPC
   - UnreadyRPC
+  - ChangeSkinRPC
+  - HideWingsRPC
+  - ShowWingsRPC
+  - CountdownRPC
+  - DisableParticlesRPC
+  - EnableParticlesRPC
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

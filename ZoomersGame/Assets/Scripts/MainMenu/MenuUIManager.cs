@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MenuUIManager : MonoBehaviour
 {
@@ -11,7 +12,14 @@ public class MenuUIManager : MonoBehaviour
     [SerializeField] private GameObject OnlineUI;
     [SerializeField] private GameObject CreateUI;
     [SerializeField] private GameObject JoinUI;
-    public Transform scoreboardContent; 
+    [SerializeField] private GameObject menuUI;
+    [SerializeField] private GameObject menuButton;
+    [SerializeField] private GameObject RandomUI;
+
+
+    public Toggle bgmToggle, soundFXToggle;
+    public bool menuOpen;
+    public Transform scoreboardContent;
 
     private void Awake()
     {
@@ -21,6 +29,20 @@ public class MenuUIManager : MonoBehaviour
             Destroy(gameObject);
     }
 
+    private void Start()
+    {
+        if (!AudioManager.instance.BGMOn())
+        {
+            bgmToggle.isOn = false;
+            AudioManager.instance.ToggleBGM();
+        }
+        if (!AudioManager.instance.FXOn())
+        {
+            soundFXToggle.isOn = false;
+            AudioManager.instance.ToggleFX();
+        }
+    }
+
     private void ClearUI()
     {
         MainUI.SetActive(false);
@@ -28,16 +50,19 @@ public class MenuUIManager : MonoBehaviour
         CreateUI.SetActive(false);
         JoinUI.SetActive(false);
         LeaderboardUI.SetActive(false);
+        RandomUI.SetActive(false);
     }
 
     public void MainScreen()
     {
+        AudioManager.instance.ButtonPress();
         ClearUI();
         MainUI.SetActive(true);
     }
 
     public void LeaderboardScreen()
     {
+        AudioManager.instance.ButtonPress();
         ClearUI();  
         LeaderboardUI.SetActive(true);
         PlayerData.instance.LoadScoreboard();
@@ -45,20 +70,43 @@ public class MenuUIManager : MonoBehaviour
 
     public void OnlineScreen()
     {
+        AudioManager.instance.ButtonPress();
         ClearUI();
         OnlineUI.SetActive(true);
     }
 
     public void CreateScreen()
     {
+        AudioManager.instance.ButtonPress();
         ClearUI();
         CreateUI.SetActive(true);
     }
 
     public void JoinScreen()
     {
+        AudioManager.instance.ButtonPress();
         ClearUI();
         JoinUI.SetActive(true);
     }
 
+    public void RandomScreen()
+    {
+        AudioManager.instance.ButtonPress();
+        ClearUI();
+        RandomUI.SetActive(true);
+    }
+    public void ShowHideMenu()
+    {
+        if (menuOpen)
+        {
+            AudioManager.instance.MenuClose();
+            menuUI.SetActive(false);
+        }
+        else
+        {
+            AudioManager.instance.MenuOpen();
+            menuUI.SetActive(true);
+        }
+        menuOpen = !menuOpen;
+    }
 }

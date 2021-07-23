@@ -19,7 +19,7 @@ public class MultiCharacterController : MonoBehaviour
 	public bool isGrounded;            // Whether or not the player is grounded.
 	public bool canDoubleJump;
 	const float ceilingRadius = .0625f; // Radius of the overlap circle to determine if the player can stand up
-	private Rigidbody2D rb;
+	public Rigidbody2D rb;
 	private bool m_FacingRight = true;  // For determining which way the player is currently facing.
 	public bool isTouchingFront; // Checking if there is something in front
 	private bool wallSliding;
@@ -32,6 +32,7 @@ public class MultiCharacterController : MonoBehaviour
 	float accelRatePerSec;
 	float forwardVelocity;
 	public Transform trapPlacement;
+	public Transform particles;
 
 	[System.Serializable]
 	public class BoolEvent : UnityEvent<bool> { }
@@ -209,6 +210,7 @@ public class MultiCharacterController : MonoBehaviour
 		if (jump && isGrounded && !isSliding)
 		{
 			// Add a vertical force to the player.
+			AudioManager.instance.Play("Jump");
 			anim.SetBool("IsJumping", true);
 			anim.SetBool("IsFalling", false);
 			isGrounded = false;
@@ -217,6 +219,7 @@ public class MultiCharacterController : MonoBehaviour
 		}
 		else if (jump && canDoubleJump && !isSliding)
 		{
+			AudioManager.instance.Play("Jump");
 			anim.SetBool("IsJumping", true);
 			anim.SetBool("IsFalling", false);
 			rb.velocity = new Vector2(rb.velocity.x, 0.8f * jumpForce);
@@ -224,6 +227,7 @@ public class MultiCharacterController : MonoBehaviour
 		}
 		else if (jump && isTouchingFront && canWallJump)
 		{
+			AudioManager.instance.Play("Jump");
 			anim.SetBool("IsJumping", true);
 			anim.SetBool("IsFalling", false);
 			rb.velocity = new Vector2(rb.velocity.x, 0.8f * jumpForce);
@@ -276,6 +280,7 @@ public class MultiCharacterController : MonoBehaviour
 			if (!player.HasPowerUp())
 			{
 				MultiPowerUp power = collision.gameObject.GetComponent<MultiPowerUp>();
+				AudioManager.instance.Play("PowerUp");
 				power.Pickup(this, player);
 				player.currentPowerUp = power;
 			}
@@ -286,6 +291,7 @@ public class MultiCharacterController : MonoBehaviour
 			if (!player.HasPowerUp())
 			{
 				MultiPowerUp power = collision.GetComponent<MultiRandomPowerUp>().GetRandomPower();
+				AudioManager.instance.Play("PowerUp");
 				power.Pickup(this, player);
 				player.currentPowerUp = power;
 			}
@@ -293,22 +299,23 @@ public class MultiCharacterController : MonoBehaviour
 
 		if (collision.CompareTag("Checkpoint"))
         {
+			Checkpoint check = collision.GetComponent<Checkpoint>();
 			if (player.currentCheckpoint == null
-				&& collision.GetComponent<Checkpoint>() == GameObject.Find("Checkpoint 1").GetComponent<Checkpoint>())
+				&& (check == GameObject.Find("Checkpoint 0").GetComponent<Checkpoint>() || check == GameObject.Find("Checkpoint 01").GetComponent<Checkpoint>()))
             {
 				Debug.Log("Crossed first checkpoint!");
-				player.currentCheckpoint = collision.GetComponent<Checkpoint>();
+				player.currentCheckpoint = check;
 				player.CrossCheckpoint(player.currentCheckpoint, true);
 				return;
 			}
-			else if (player.currentCheckpoint.Next() == collision.GetComponent<Checkpoint>()) // Correct checkpoint
+			else if (player.currentCheckpoint.Next() == check) // Correct checkpoint
             {
 				Debug.Log("Crossed correct checkpoint!");
 				player.currentCheckpoint = player.currentCheckpoint.Next();
 				player.CrossCheckpoint(player.currentCheckpoint, true);
 				return;
             }
-			else if (player.currentCheckpoint.Previous() == collision.GetComponent<Checkpoint>()) // Backward checkpoint
+			else if (player.currentCheckpoint.Previous() == check) // Backward checkpoint
 			{
 				Debug.Log("You're going backwards! (Crossed a previous checkpoint)");
 				player.currentCheckpoint = player.currentCheckpoint.Previous();

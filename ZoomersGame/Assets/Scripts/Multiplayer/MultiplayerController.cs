@@ -12,6 +12,7 @@ public class MultiplayerController : MonoBehaviour
     [SerializeField] MultiCharacterController controller;
     [SerializeField] private GameObject CherryPowerButton;
     [SerializeField] private GameObject BoxPowerButton;
+    [SerializeField] private GameObject FlyPowerButton;
     public GameObject LeftRightButtons;
     private Rigidbody2D rb;
     private PhotonView view;
@@ -19,6 +20,7 @@ public class MultiplayerController : MonoBehaviour
     public GameObject LeaderCamera;
     public GameObject PlayerButtons, PlaceholderButtons;
     public Text PlayerNameText;
+    public GameObject nameBackground;
     public SpriteRenderer Sprite;
     public bool usingPowerUp;
     public MultiPowerUp previousPowerUp, currentPowerUp;
@@ -28,7 +30,9 @@ public class MultiplayerController : MonoBehaviour
     public Checkpoint currentCheckpoint;
     public int rank = 0, wins = 0;
     public MultiplayerManager Manager;
-    public bool isReady, isHost, isLoading, lostRound, hasWon = false;
+    public bool isReady, isHost, isLoading, lostRound, hasWon = false, jumpButtonDown;
+    public List<RuntimeAnimatorController> skins;
+    public GameObject wings, particles;
 
     private void Awake()
     {
@@ -41,11 +45,13 @@ public class MultiplayerController : MonoBehaviour
                 BecomeHost();
             PlayerNameText.text = PhotonNetwork.NickName;
             PlayerNameText.color = Color.cyan;
+            nameBackground.transform.localScale = new Vector3(PlayerNameText.text.Length / 1.5f, 2.5f, 0f);
         }
         else
         {
             PlayerNameText.text = view.Owner.NickName;
             PlayerNameText.color = Color.white;
+            nameBackground.transform.localScale = new Vector3(PlayerNameText.text.Length / 1.5f, 2.5f, 0f);
         }
         Manager.AddPlayer(this);
     }
@@ -55,6 +61,7 @@ public class MultiplayerController : MonoBehaviour
         PlayerCamera.SetActive(false);
         if (view.IsMine)
         {
+            AudioManager.instance.HoldingArea();
             EnableButtons();
             PlayerCamera.SetActive(true);
             if (isHost)
@@ -122,8 +129,20 @@ public class MultiplayerController : MonoBehaviour
     public void Jump()
     {
         if (view.IsMine)
+        {
             jump = true;
+            jumpButtonDown = true;
+        }
     }
+
+    public void Float()
+    {
+        if (view.IsMine)
+        {
+            jumpButtonDown = false;
+        }
+    }
+
     public void Crouch()
     {
         if (view.IsMine)
@@ -148,14 +167,14 @@ public class MultiplayerController : MonoBehaviour
     }
 
     [PunRPC]
-    private void UpdateRulesRPC(int winsNeeded, bool isJustJoined)
+    private void UpdateRulesRPC(int winsNeeded, int mapIndex, bool isJustJoined)
     {
-        Manager.UpdateRules(winsNeeded, isJustJoined);
+        Manager.UpdateRules(winsNeeded, mapIndex, isJustJoined);
     }
 
-    public void UpdateRules(int winsNeeded, bool isJustJoined)
+    public void UpdateRules(int winsNeeded, int mapIndex, bool isJustJoined)
     {
-        view.RPC("UpdateRulesRPC", RpcTarget.AllBuffered, winsNeeded, isJustJoined);
+        view.RPC("UpdateRulesRPC", RpcTarget.AllBuffered, winsNeeded, mapIndex, isJustJoined);
     }
 
     [PunRPC]
@@ -246,18 +265,22 @@ public class MultiplayerController : MonoBehaviour
         moveRight = false;
         jump = false;
         crouch = false;
-        rb.velocity = new Vector2(0, -1000);
+        rb.velocity = new Vector2(0, 0);
     }
 
     [PunRPC]
     private void FlipTrue()
     {
+        if (!Sprite.flipX)
+            particles.transform.RotateAround(transform.position, transform.up, 180f);
         Sprite.flipX = true;
     }
 
     [PunRPC]
     private void FlipFalse()
     {
+        if (Sprite.flipX)
+            particles.transform.RotateAround(transform.position, transform.up, 180f);
         Sprite.flipX = false;
     }
 
@@ -373,7 +396,7 @@ public class MultiplayerController : MonoBehaviour
     {
         Manager.UpdatePlayerScores();
         Manager.JoinNonHostMessage();
-        UpdateRules(Manager.winsNeeded, true);
+        UpdateRules(Manager.winsNeeded, Manager.mapIndex, true);
     }
 
     
@@ -437,14 +460,20 @@ public class MultiplayerController : MonoBehaviour
             if (Input.GetButtonDown("PowerUp"))
                 ConsumePower();
             if (HasPowerUp())
-                if (currentPowerUp.GetType().ToString() == "MultiCherryPowerUp")
+            {
+                string currentPower = currentPowerUp.GetType().ToString();
+                if (currentPower == "MultiCherryPowerUp")
                     CherryPowerButton.SetActive(true);
-                else
+                else if (currentPower == "MultiBoxPowerUp")
                     BoxPowerButton.SetActive(true);
+                else if (currentPower == "MultiFlyPowerUp")
+                    FlyPowerButton.SetActive(true);
+            }
             else if (!HasPowerUp())
             {
                 CherryPowerButton.SetActive(false);
                 BoxPowerButton.SetActive(false);
+                FlyPowerButton.SetActive(false);
             }
             if (Manager.isRacing)
             {
@@ -554,6 +583,58 @@ public class MultiplayerController : MonoBehaviour
         animator.SetBool("IsSliding", isSliding);
     }
 
+    [PunRPC]
+    private void ShowWingsRPC()
+    {
+        wings.SetActive(true);
+    }
+
+    public void ShowWings()
+    {
+        view.RPC("ShowWingsRPC", RpcTarget.AllBuffered);
+    }
+
+    [PunRPC]
+    private void HideWingsRPC()
+    {
+        wings.SetActive(false);
+    }
+
+    public void HideWings()
+    {
+        view.RPC("HideWingsRPC", RpcTarget.AllBuffered);
+    }
+
+    [PunRPC]
+    private void ChangeSkinRPC(int skinIndex)
+    {
+        GetComponent<Animator>().runtimeAnimatorController = skins[skinIndex];
+    }
+    public void ChangeSkin(int skinIndex)
+    {
+        view.RPC("ChangeSkinRPC", RpcTarget.AllBuffered, skinIndex);
+    }
+
+    public void EnableParticles()
+    {
+        view.RPC("EnableParticlesRPC", RpcTarget.AllBuffered);
+    }
+
+    [PunRPC]
+    private void EnableParticlesRPC()
+    {
+        particles.SetActive(true);
+    }
+    public void DisableParticles()
+    {
+        view.RPC("DisableParticlesRPC", RpcTarget.AllBuffered);
+    }
+
+    [PunRPC]
+    private void DisableParticlesRPC()
+    {
+        particles.SetActive(false);
+    }
     private void FixedUpdate()
     {
         if (view.IsMine)

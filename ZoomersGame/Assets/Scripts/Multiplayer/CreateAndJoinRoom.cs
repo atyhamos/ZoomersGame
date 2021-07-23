@@ -18,6 +18,8 @@ public class CreateAndJoinRoom : MonoBehaviourPunCallbacks
     [Header("Message")]
     [SerializeField] private Text createMessage;
     [SerializeField] private Text joinMessage;
+    [SerializeField] private Text randomMessage;
+
 
     private void Awake()
     {
@@ -34,7 +36,37 @@ public class CreateAndJoinRoom : MonoBehaviourPunCallbacks
 
     public void CreateRoom()
     {
+        AudioManager.instance.ButtonPress();
         StartCoroutine(CreateRoomTask());
+    }
+
+    public void JoinRandom()
+    {
+        AudioManager.instance.ButtonPress();
+        StartCoroutine(JoinRandomTask());
+    }
+
+    public IEnumerator JoinRandomTask()
+    {
+        PlayerData.instance.loading = true;
+        PlayerData.instance.InMatch();
+        yield return new WaitForSeconds(1f);
+        if (PlayerData.instance.alreadyInMatch)
+        {
+            randomMessage.text = "You are already running a separate instance of the game!";
+        }
+        else
+        {
+            Debug.Log("Joining random room...");
+            randomMessage.text = "Joining random room...";
+            PhotonNetwork.JoinRandomRoom();
+        }
+    }
+
+    public override void OnJoinRandomFailed(short returnCode, string message)
+    {
+        Debug.Log("Failed to join random room. Creating one!");
+        PhotonNetwork.CreateRoom("", new RoomOptions() { MaxPlayers = 4 });
     }
 
     public IEnumerator CreateRoomTask()
@@ -71,6 +103,7 @@ public class CreateAndJoinRoom : MonoBehaviourPunCallbacks
 
     public void JoinRoom()
     {
+        AudioManager.instance.ButtonPress();
         StartCoroutine(JoinRoomTask());
     }
 

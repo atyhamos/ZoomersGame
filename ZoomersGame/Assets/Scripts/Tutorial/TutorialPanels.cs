@@ -16,10 +16,11 @@ public class TutorialPanels : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        AudioManager.instance.Tutorial();
         collided = false;
         PopupPanelAnim = Panel.GetComponent<Animator>();
         PopupTextAnim = Text.GetComponent<Animator>();
-    }
+    }   
     public void DisplayText()
     {
         PopUpPanel.SetActive(true);

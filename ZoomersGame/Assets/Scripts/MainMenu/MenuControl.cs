@@ -47,22 +47,26 @@ public class MenuControl : MonoBehaviourPunCallbacks
 
     public void Tutorial()
     {
+        AudioManager.instance.ButtonPress();
         GameManager.instance.ChangeScene(4);
     }
 
     public void Singleplayer()
     {
+        AudioManager.instance.ButtonPress();
         GameManager.instance.ChangeScene(5);
     }
 
     public void LogOut()
     {
+        AudioManager.instance.ButtonPress();
         if (FirebaseManager.instance == null)
             FirebaseAutoLogin.instance.auth.SignOut();
         else
             FirebaseManager.instance.auth.SignOut();
 
         PhotonNetwork.Disconnect();
+        Destroy(PlayerData.instance);
     }
 
     public override void OnDisconnected(DisconnectCause cause)
@@ -77,5 +81,20 @@ public class MenuControl : MonoBehaviourPunCallbacks
     {
         playerStats.text = bestTime;
         leaderBoard.text = leaderName + $" ({leaderTime})";
+    }
+
+    public void Click()
+    {
+        AudioManager.instance.Click();
+    }
+
+    public void ToggleBGM()
+    {
+        AudioManager.instance.ToggleBGM();
+    }
+
+    public void ToggleFX()
+    {
+        AudioManager.instance.ToggleFX();
     }
 }
