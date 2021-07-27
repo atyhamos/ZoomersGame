@@ -154,6 +154,7 @@ public class PlayerData : MonoBehaviour
             totalInstances = int.Parse(snapshot.Child("instances").Value.ToString());
             friendList.Clear();
             friendRequestList.Clear();
+            friendNameList.Clear();
             foreach (DataSnapshot child in snapshot.Child("friends").Children)
             {
                 // is a friend
@@ -189,7 +190,10 @@ public class PlayerData : MonoBehaviour
                 {
                     Debug.Log("Mutual Friends!");
                     if (!friendList.Contains(userId))
+                    {
                         friendList.Add(userId);
+                        friendNameList.Add(snapshot.Child("username").Value.ToString());
+                    }
                     continue;
                 }
                 Debug.Log("Not mutual friends");
@@ -212,8 +216,6 @@ public class PlayerData : MonoBehaviour
             DataSnapshot snapshot = DBTask.Result;
             string username = snapshot.Child("username").Value.ToString();
             int instances = int.Parse(snapshot.Child("instances").Value.ToString());
-            if (!friendNameList.Contains(username))
-                friendNameList.Add(username);
             GameObject friendlistElement = Instantiate(friendElement, FriendsUIManager.instance.friendsContent.transform);
             friendlistElement.GetComponent<FriendElement>().NewFriendElement(username, instances == 0 ? "Offline" : "Online", userId);
         }
@@ -269,7 +271,7 @@ public class PlayerData : MonoBehaviour
             DataSnapshot snapshot = DBTask.Result;
             string username = snapshot.Child("username").Value.ToString();
             int instances = int.Parse(snapshot.Child("instances").Value.ToString());
-            GameObject friendlistElement = Instantiate(friendElement, MenuUIManager.instance.GetComponent<FriendsUIManager>().friendsContent.transform);
+            GameObject friendlistElement = Instantiate(friendElement, FriendsUIManager.instance.friendsContent.transform);
             friendlistElement.GetComponent<FriendElement>().NewFriendReqElement(username, instances == 0 ? "Offline" : "Online", userId);
         }
     }
@@ -507,6 +509,10 @@ public class PlayerData : MonoBehaviour
         foreach (Transform child in content.transform)
         {
             Destroy(child.gameObject);
+        }
+        foreach (string friend in friendRequestList)
+        {
+            StartCoroutine(LoadFriendReqData(friend));
         }
         foreach (string friend in friendList)
         {

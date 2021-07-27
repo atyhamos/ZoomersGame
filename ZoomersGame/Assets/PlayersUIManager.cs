@@ -11,10 +11,7 @@ public class PlayersUIManager : MonoBehaviour
 
     private void Awake()
     {
-        if (instance == null)
-            instance = this;
-        else if (instance != this)
-            Destroy(gameObject);
+        instance = this;
     }
 
 }

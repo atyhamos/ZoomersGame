@@ -60,6 +60,7 @@ public class MenuControl : MonoBehaviourPunCallbacks
     public void LogOut()
     {
         AudioManager.instance.ButtonPress();
+        PlayerData.instance.StartCoroutine("UpdateStatus", false);
         if (FirebaseManager.instance == null)
             FirebaseAutoLogin.instance.auth.SignOut();
         else
@@ -68,6 +69,7 @@ public class MenuControl : MonoBehaviourPunCallbacks
         PhotonNetwork.Disconnect();
         Destroy(PlayerData.instance);
     }
+
 
     public override void OnDisconnected(DisconnectCause cause)
     {

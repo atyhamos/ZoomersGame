@@ -71,11 +71,12 @@ public class FriendsUIManager : MonoBehaviour
         }
         else
         {
-            foreach (Transform child in addFriendsUI.GetComponent<PlayersUIManager>().playersContent.transform)
+            foreach (Transform child in PlayersUIManager.instance.playersContent.transform)
             {
+                Debug.Log("Destroying old data!!!!");
                 Destroy(child.gameObject);
             }
-            MultiplayerManager.instance.LoadPlayerList(addFriendsUI.GetComponent<PlayersUIManager>().playersContent.transform);
+            MultiplayerManager.instance.LoadPlayerList(PlayersUIManager.instance.playersContent.transform);
             ShowHideFriends();
             AudioManager.instance.MenuOpen();
             addFriendsUI.SetActive(true);

@@ -24,6 +24,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     public string winnerName;
     public Button startButton;
     public Button readyButton;
+    public Button saveButton;
     private Player[] playerList;
     private Vector2 spawnPosition, respawnLocation;
     private string roomCode, playersNotReady;
@@ -147,7 +148,11 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
                     StartCoroutine(GoTask());
             }
         }
-        Debug.Log(AllLoaded());
+        if (rulesOpen)
+            if (int.Parse(winsInput.text) <= 0)
+                saveButton.interactable = false;
+            else
+                saveButton.interactable = true;
     }
 
     private IEnumerator GoTask()
@@ -211,16 +216,17 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         skinsButton.SetActive(false);
         friendsButton.SetActive(false);
         skinsUI.SetActive(false);
-        //while (!AllLoaded())
-        //    yield return null;
         yield return new WaitForSeconds(1f);
         loadingUI.SetActive(false);
         inLobby = false;
         AudioManager.instance.Race();
+        Checkpoints.SetActive(true);
     }
     public void StartButton()
     {
         AudioManager.instance.ButtonPress();
+        PhotonNetwork.CurrentRoom.IsOpen = false;
+        PhotonNetwork.CurrentRoom.IsVisible = false;
         foreach (MultiplayerController player in racersArray)
         {
             player.StartButton(); //RPC call
@@ -257,6 +263,8 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     public void SubmitRules()
     {
         AudioManager.instance.ButtonPress();
+        if (winsInput.text == "0")
+            return;
         if (winsInput.text != "")
             UpdateRules(int.Parse(winsInput.text), mapIndex, false);
         else
@@ -407,8 +415,12 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         loadingUI.SetActive(false);
         inLobby = true;
         readyButton.image.color = Color.grey;
+        player.wins = 0;
         player.isReady = false;
         player.EnterLobby();
+        Checkpoints.SetActive(true);
+        PhotonNetwork.CurrentRoom.IsOpen = true;
+        PhotonNetwork.CurrentRoom.IsVisible = true;
     }
 
     public void ClearUI()
@@ -436,6 +448,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
 
     public void ResetRound()
     {
+
         respawnLocation = new Vector2(Random.Range(leadPlayer.currentCheckpoint.transform.position.x - 1, leadPlayer.currentCheckpoint.transform.position.x + 1),
                 player.currentCheckpoint.transform.position.y + 2);
         Checkpoints.SetActive(false);

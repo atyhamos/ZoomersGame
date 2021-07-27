@@ -261,11 +261,11 @@ public class MultiplayerController : MonoBehaviour
     }
     public void StopMoving()
     {
+        rb.velocity = new Vector2(0, 0);
         moveLeft = false;
         moveRight = false;
         jump = false;
         crouch = false;
-        rb.velocity = new Vector2(0, 0);
     }
 
     [PunRPC]
@@ -352,12 +352,12 @@ public class MultiplayerController : MonoBehaviour
     [PunRPC]
     private void Respawn(int racerId)
     {
+        StopMoving();
         rank = 1;
         checkpointsCrossed = 0;
         Manager.leadPlayer = Manager.racersArray[racerId];
         this.currentCheckpoint = Manager.leadPlayer.currentCheckpoint;
         Manager.ResetRound();
-        StopMoving();
         lostRound = false;
         hasWon = false;
     }
@@ -530,6 +530,8 @@ public class MultiplayerController : MonoBehaviour
     [PunRPC]
     private void LeadCamera()
     {
+        if (currentCheckpoint == null)
+            return;
         PlayerCamera.SetActive(true);
         MultiBoundsCheck.instance.UpdateBounds();
         MultiBoundsCheck.instance.UpdateSize(PlayerCamera.GetComponent<CinemachineVirtualCamera>(), currentCheckpoint.orthographicSize);

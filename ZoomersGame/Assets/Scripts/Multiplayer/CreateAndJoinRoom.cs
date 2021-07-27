@@ -96,13 +96,21 @@ public class CreateAndJoinRoom : MonoBehaviourPunCallbacks
 
     public override void OnCreateRoomFailed(short returnCode, string message)
     {
-        Debug.Log("Failed to create room");
-        createMessage.text = "Failed to create room";
+        Debug.Log("Failed to create room: " + message);
+        if (returnCode == 32766)
+            createMessage.text = "A game with that code already exists!";
+        else
+            createMessage.text = message;
         base.OnCreateRoomFailed(returnCode, message);
     }
 
     public void JoinRoom()
     {
+        if (joinInput.text.Length < 6)
+        {
+            joinMessage.text = "Room codes are at least 6 characters long";
+            return;
+        }
         AudioManager.instance.ButtonPress();
         StartCoroutine(JoinRoomTask());
     }
@@ -153,8 +161,8 @@ public class CreateAndJoinRoom : MonoBehaviourPunCallbacks
 
     public override void OnJoinRoomFailed(short returnCode, string message)
     {
-        Debug.Log("Failed to join room");
-        joinMessage.text = "Failed to join room";
+        Debug.Log("Failed to join room: " + message);
+        joinMessage.text = message;
         base.OnJoinRoomFailed(returnCode, message);
     }
 
