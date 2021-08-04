@@ -102,26 +102,45 @@ public class Timer : MonoBehaviour
             Debug.Log(timePassed);
             // Only update the faster time
             if (timePassed < PlayerData.instance.bestRawTime)
-                StartCoroutine(UpdateBestTime(timePassed, timerText.text));
+                StartCoroutine(UpdateBestTime(timePassed, timerText.text, true));
+            else if (timePassed < PlayerData.instance.weeklyBestRawTime)
+                StartCoroutine(UpdateBestTime(timePassed, timerText.text, false));
             else
                 Debug.Log("Time is slower than fastest time, not updating to database");
         }
     }
 
-    private IEnumerator UpdateBestTime(float _raw, string _formatted)
+    private IEnumerator UpdateBestTime(float _raw, string _formatted, bool global)
     {
-        var DBTaskRaw = fbDatabase.Child("users").Child(fbUser.UserId).Child("singleplayer raw").SetValueAsync(_raw);
-        yield return new WaitUntil(predicate: () => DBTaskRaw.IsCompleted);
-        if (DBTaskRaw.Exception != null)
+        if (global)
         {
-            Debug.LogWarning(message: $"Failed to register task with {DBTaskRaw.Exception}");
+            var DBTaskRaw = fbDatabase.Child("users").Child(fbUser.UserId).Child("singleplayer raw").SetValueAsync(_raw);
+            yield return new WaitUntil(predicate: () => DBTaskRaw.IsCompleted);
+            if (DBTaskRaw.Exception != null)
+            {
+                Debug.LogWarning(message: $"Failed to register task with {DBTaskRaw.Exception}");
+            }
+            Debug.Log($"Raw time updated to {_raw}");
+            var DBTaskFormat = fbDatabase.Child("users").Child(fbUser.UserId).Child("singleplayer formatted").SetValueAsync(_formatted);
+            yield return new WaitUntil(predicate: () => DBTaskFormat.IsCompleted);
+            if (DBTaskFormat.Exception != null)
+            {
+                Debug.LogWarning(message: $"Failed to register task with {DBTaskFormat.Exception}");
+            }
+            Debug.Log($"Formatted time updated to {_formatted}");
+        }
+        var WeeklyTaskRaw = fbDatabase.Child("users").Child(fbUser.UserId).Child("weekly singleplayer raw").SetValueAsync(_raw);
+        yield return new WaitUntil(predicate: () => WeeklyTaskRaw.IsCompleted);
+        if (WeeklyTaskRaw.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {WeeklyTaskRaw.Exception}");
         }
         Debug.Log($"Raw time updated to {_raw}");
-        var DBTaskFormat = fbDatabase.Child("users").Child(fbUser.UserId).Child("singleplayer formatted").SetValueAsync(_formatted);
-        yield return new WaitUntil(predicate: () => DBTaskFormat.IsCompleted);
-        if (DBTaskFormat.Exception != null)
+        var WeeklyTaskFormat = fbDatabase.Child("users").Child(fbUser.UserId).Child("weekly singleplayer formatted").SetValueAsync(_formatted);
+        yield return new WaitUntil(predicate: () => WeeklyTaskFormat.IsCompleted);
+        if (WeeklyTaskFormat.Exception != null)
         {
-            Debug.LogWarning(message: $"Failed to register task with {DBTaskFormat.Exception}");
+            Debug.LogWarning(message: $"Failed to register task with {WeeklyTaskFormat.Exception}");
         }
         Debug.Log($"Formatted time updated to {_formatted}");
         PlayerData.instance.RefreshData();

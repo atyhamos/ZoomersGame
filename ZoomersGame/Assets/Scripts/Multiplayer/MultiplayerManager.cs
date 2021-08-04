@@ -22,9 +22,7 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     public Toggle bgmToggle, soundFXToggle;
     public int winsNeeded = 5, mapIndex = 0;
     public string winnerName;
-    public Button startButton;
-    public Button readyButton;
-    public Button saveButton;
+    public Button startButton, readyButton, saveButton, mushroom, radish, pig, slime, zoomerFox;
     private Player[] playerList;
     private Vector2 spawnPosition, respawnLocation;
     private string roomCode, playersNotReady;
@@ -70,7 +68,12 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
             soundFXToggle.isOn = false;
             AudioManager.instance.ToggleFX();
         }
+        InvokeRepeating("CheckDisconnect", 0f, 5f);
+    }
 
+    private void CheckDisconnect()
+    {
+        PlayerData.instance.StartCoroutine("CheckDisconnectedDatabase");
     }
     public void SpawnPlayer()
     {
@@ -403,7 +406,13 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         // Game ends here
         AudioManager.instance.GameWin();
         ClearUI();
-        winnerScreen.text = $"Our winner!\n{winnerName}";
+        int coins = Mathf.Min((racersArray.Count - 1) * 2, player.wins);
+        if (winsNeeded < 3)
+            coins = 0;
+        else if (player.wins == winsNeeded)
+            coins = (racersArray.Count - 1) * 4;
+        winnerScreen.text = $"Our winner!\n{winnerName}\nYou earned {coins} coins";
+        PlayerData.instance.StartCoroutine("UpdateCoins", coins);
         winnerUI.SetActive(true);
         Checkpoints.SetActive(false);
         yield return new WaitForSeconds(5f);
@@ -592,13 +601,28 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     {
         if (skinsOpen)
         {
-            AudioManager.instance.MenuOpen();
+            AudioManager.instance.MenuClose();
             skinsUI.SetActive(false);
         }
         else
         {
-            AudioManager.instance.MenuClose();
+            AudioManager.instance.MenuOpen();
             skinsUI.SetActive(true);
+            foreach (string skin in PlayerData.instance.skinsList)
+            {
+                if (skin == "Mushroom")
+                    mushroom.interactable = true;
+                else if (skin == "Radish")
+                    radish.interactable = true;
+                else if (skin == "Angry Pig")
+                    pig.interactable = true;
+                else if (skin == "Slime")
+                    slime.interactable = true;
+                else if (skin == "Zoomer Fox")
+                    zoomerFox.interactable = true;
+                else
+                    continue;
+            }
         }
         skinsOpen = !skinsOpen;
     }
@@ -608,12 +632,12 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     {
         if (menuOpen)
         {
-            AudioManager.instance.MenuOpen();
+            AudioManager.instance.MenuClose();
             menuUI.SetActive(false);
         }
         else
         {
-            AudioManager.instance.MenuClose();
+            AudioManager.instance.MenuOpen();
             menuUI.SetActive(true);
         }
         menuOpen = !menuOpen;
@@ -662,6 +686,40 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         AudioManager.instance.ButtonPress();
         Debug.Log("Change to Virtual Guy!");
         player.ChangeSkin(4);
+    }
+
+    public void ChangePig()
+    {
+        AudioManager.instance.ButtonPress();
+        Debug.Log("Change to Angry Pig!");
+        player.ChangeSkin(5);
+    }
+    public void ChangeMushroom()
+    {
+        AudioManager.instance.ButtonPress();
+        Debug.Log("Change to Mushroom!");
+        player.ChangeSkin(6);
+    }
+
+    public void ChangeRadish()
+    {
+        AudioManager.instance.ButtonPress();
+        Debug.Log("Change to Radish!");
+        player.ChangeSkin(7);
+    }
+
+    public void ChangeSlime()
+    {
+        AudioManager.instance.ButtonPress();
+        Debug.Log("Change to Slime!");
+        player.ChangeSkin(8);
+    }
+
+    public void ChangeZoomerFox()
+    {
+        AudioManager.instance.ButtonPress();
+        Debug.Log("Change to Zoomer Fox!");
+        player.ChangeSkin(9);
     }
 
     public void ChangeMap1()

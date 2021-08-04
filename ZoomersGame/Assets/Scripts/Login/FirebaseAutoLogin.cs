@@ -18,15 +18,15 @@ public class FirebaseAutoLogin : MonoBehaviour
 
     private void Awake()
     {
+        DontDestroyOnLoad(gameObject);
         if (instance == null)
             instance = this;
         else if (instance != this)
-        {
+        { 
             Destroy(instance.gameObject);
             instance = this;
         }
     }
-
 
     private IEnumerator CheckAndFixDependencies()
     {
@@ -69,9 +69,11 @@ public class FirebaseAutoLogin : MonoBehaviour
         if (user != null)
         {
             if (user.IsEmailVerified)
+            {
                 // Move to Loading page                
+                StartCoroutine(UpdateLogin());
                 GameManager.instance.ChangeScene(2);
-
+            }
             else
             {
                 GameManager.instance.ChangeScene(1);
@@ -81,6 +83,120 @@ public class FirebaseAutoLogin : MonoBehaviour
         else
             GameManager.instance.ChangeScene(1);
     }
+
+    private IEnumerator UpdateLogin()
+    {
+        var DBTask = DBreference.Child("last login time").SetValueAsync(System.DateTime.Now.DayOfYear);
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+        if (DBTask.Exception != null)
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        else
+            Debug.Log("Updated login time");
+        var GiftTimeTask = DBreference.Child("tomorrow time").GetValueAsync();
+        yield return new WaitUntil(predicate: () => GiftTimeTask.IsCompleted);
+        if (GiftTimeTask.Exception != null)
+            Debug.LogWarning(message: $"Failed to register task with {GiftTimeTask.Exception}");
+        else
+        {
+            bool updated = false;
+            Debug.Log("Retrieved tomorrow gift refresh time");
+            int tomorrowTime = int.Parse(GiftTimeTask.Result.Value.ToString());
+            while (tomorrowTime - System.DateTime.Now.DayOfYear <= 0)
+            {
+                tomorrowTime += 1;
+                updated = true;
+            }
+            if (updated)
+            {
+                DBTask = DBreference.Child("tomorrow time").SetValueAsync(tomorrowTime);
+                yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+                if (DBTask.Exception != null)
+                    Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+                else
+                    Debug.Log("Updated tomorrow gift refresh time");
+                StartCoroutine(ResetGifts());
+            }
+        }
+        var LeaderboardTimeTask = DBreference.Child("refresh leaderboard time").GetValueAsync();
+        yield return new WaitUntil(predicate: () => LeaderboardTimeTask.IsCompleted);
+        if (LeaderboardTimeTask.Exception != null)
+            Debug.LogWarning(message: $"Failed to register task with {LeaderboardTimeTask.Exception}");
+        else
+        {
+            bool updated = false;
+            Debug.Log("Retrieved leaderboard refresh time");
+            int refreshTime = int.Parse(LeaderboardTimeTask.Result.Value.ToString());
+            while (refreshTime - System.DateTime.Now.DayOfYear <= 0)
+            {
+                refreshTime += 7;
+                updated = true;
+            }
+            if (updated)
+            {
+                DBTask = DBreference.Child("refresh leaderboard time").SetValueAsync(refreshTime);
+                yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+                if (DBTask.Exception != null)
+                    Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+                else
+                    Debug.Log("Updated leaderboard refresh time");
+                StartCoroutine(ResetLeaderboard());
+            }
+        }
+    }
+
+    private IEnumerator ResetGifts()
+    {
+        var DBTask = DBreference.Child("users").GetValueAsync();
+
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        else
+        {
+            DataSnapshot snapshot = DBTask.Result;
+            foreach (DataSnapshot childSnapshot in snapshot.Children)
+            {
+                DBreference.Child("users").Child(childSnapshot.Key).Child("daily gift").SetValueAsync(true);
+            }
+        }
+    }
+
+    private IEnumerator ResetLeaderboard()
+    {
+        var DBTask = DBreference.Child("users").OrderByChild("weekly singleplayer raw").GetValueAsync();
+
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        else
+        {
+            DataSnapshot snapshot = DBTask.Result;
+            int counter = 10;
+            foreach (DataSnapshot childSnapshot in snapshot.Children)
+            {
+                if (childSnapshot.Child("weekly singleplayer raw").Value == null)
+                    continue;
+                else
+                {
+                    if (counter > 0)
+                    {
+                        // Get coins based off your position
+                        DBreference.Child("users").Child(childSnapshot.Key).Child("coins").SetValueAsync(int.Parse(childSnapshot.Child("coins").Value.ToString()) + counter * 20);
+                        counter--;
+                    }
+                }
+                DBreference.Child("users").Child(childSnapshot.Key).Child("weekly singleplayer raw").RemoveValueAsync();
+                DBreference.Child("users").Child(childSnapshot.Key).Child("weekly singleplayer formatted").RemoveValueAsync();
+            }
+        }
+    }
+
     private void InitializeFirebase()
     {
         auth = FirebaseAuth.DefaultInstance;

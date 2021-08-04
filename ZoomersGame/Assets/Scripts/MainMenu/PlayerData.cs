@@ -9,22 +9,22 @@ using UnityEngine.UI;
 public class PlayerData : MonoBehaviour
 {
     public static PlayerData instance;
-    public string bestTime;
-    public float bestRawTime;
+    public string bestTime, weeklyBestTime;
+    public float bestRawTime, weeklyBestRawTime;
     public bool inMatch = false, alreadyInMatch = false;
     public string leaderTime;
     public string leaderName;
     public bool loading, isPaused = false;
-    public List<string> friendList, friendRequestList, friendNameList;
+    public List<string> friendList, friendRequestList, friendNameList, skinsList;
     public TMP_InputField friendNameInput;
     public Text addFriendMessage;
     [SerializeField] private GameObject scoreElement;
     [SerializeField] private GameObject friendElement;
-    [SerializeField] private GameObject invitation;
+    [SerializeField] private GameObject invitation, disconnectedAlert;
     public FirebaseUser user;
     public DatabaseReference DBreference;
-    public int totalInstances;
-    public bool inviteRequest = false;
+    public int totalInstances, coins;
+    public bool inviteRequest = false, disconnected = false, dailyGift = false;
 
     private void Awake()
     {
@@ -47,11 +47,13 @@ public class PlayerData : MonoBehaviour
             user = FirebaseManager.instance.user;
             DBreference = FirebaseManager.instance.DBreference;
         }
+     //   StartCoroutine(UpdateDatabase());
         StartCoroutine(LoadUserData());
         StartCoroutine(LoadLeaderData());
         StartCoroutine(UpdateStatus(true));
         InvokeRepeating("CheckInvites", 0f, 5f);
         InvokeRepeating("InMatch", 5f, 10f);
+        InvokeRepeating("CheckGift", 0f, 60f);
     }
 
     private void CheckInvites()
@@ -60,12 +62,92 @@ public class PlayerData : MonoBehaviour
             return;
         else
         {
-        if (!inMatch)
-            StartCoroutine(CheckInvitesDatabase());
+            if (!inMatch)
+                StartCoroutine(CheckInvitesDatabase());
         }
     }
 
+    private void CheckGift()
+    {
+        if (dailyGift)
+            return;
+        else
+        {
+            StartCoroutine(CheckGiftDatabase());
+        }
+    }
 
+    // Used to mass update database
+    //private IEnumerator UpdateDatabase()
+    //{
+    //    var DBTask = DBreference.Child("users").GetValueAsync();
+    //    yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+    //    if (DBTask.Exception != null)
+    //    {
+    //        Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+    //    }
+    //    else
+    //    {
+    //        foreach (DataSnapshot child in DBTask.Result.Children)
+    //        {
+    //            var UpdateTask = DBreference.Child("users").Child(child.Key).Child("daily gift").SetValueAsync(true);
+    //            if (UpdateTask.Exception != null)
+    //            {
+    //                Debug.LogWarning(message: $"Failed to register task with {UpdateTask.Exception}");
+    //            }
+    //            else
+    //            {
+    //                Debug.Log("Updated");
+    //            }
+    //        }
+    //        Debug.Log("Update successfully");
+    //    }
+    //}
+
+    private IEnumerator CheckGiftDatabase()
+    {
+        var DBTask = DBreference.Child("users").Child(user.UserId).Child("daily gift").GetValueAsync();
+
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        else
+        {
+            if (bool.Parse(DBTask.Result.Value.ToString()))
+            {
+                dailyGift = true;
+            }
+        }
+    }
+
+    public IEnumerator CheckDisconnectedDatabase()
+    {
+        var DBTask = DBreference.Child("users").Child(user.UserId).Child("disconnected").GetValueAsync();
+
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            loading = false;
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        else
+        {
+            if (bool.Parse(DBTask.Result.Value.ToString()))
+            {
+                StartCoroutine(DisconnectActionDB(false));
+                Debug.Log("Forced to leave room from other instance");
+                GameObject alert = Instantiate(disconnectedAlert, GameObject.Find("Canvas").transform);
+                yield return new WaitForSeconds(2f);
+                MultiplayerManager.instance.Home();
+            }
+            else
+                yield break;
+        }
+    }
 
     private IEnumerator CheckInvitesDatabase()
     {
@@ -101,6 +183,56 @@ public class PlayerData : MonoBehaviour
         }
     }
 
+    public void ReceiveGift()
+    {
+        StartCoroutine(ReceiveGiftDatabase());
+        coins += 10;
+    }
+
+    private IEnumerator ReceiveGiftDatabase()
+    {
+        var DBTask = DBreference.Child("users").Child(user.UserId).Child("daily gift").SetValueAsync(false);
+
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        else
+        {
+            Debug.Log("Received gift");
+            DBTask = DBreference.Child("users").Child(user.UserId).Child("coins").SetValueAsync(coins + 10);
+            yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+            if (DBTask.Exception != null)
+            {
+                Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+            }
+            else
+                Debug.Log("Got 10 coins from daily gift!");
+        }
+    }
+
+    public void UpdateCoins(int amount)
+    {
+        StartCoroutine(UpdateCoinsDatabase(amount));
+    }
+    private IEnumerator UpdateCoinsDatabase(int amount)
+    {
+        var DBTask = DBreference.Child("users").Child(user.UserId).Child("coins").SetValueAsync(coins + amount);
+
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            loading = false;
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        else
+        {
+            Debug.Log("Updated coins successfully");
+        }
+    }
 
     public void InvitationAction(string username, string code, bool accepted)
     {
@@ -128,6 +260,23 @@ public class PlayerData : MonoBehaviour
         }
     }
 
+    public IEnumerator DisconnectActionDB(bool disconnected)
+    {
+        var DBTask = DBreference.Child("users").Child(user.UserId).Child("disconnected").SetValueAsync(disconnected);
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+        if (DBTask.Exception != null)
+        {
+            loading = false;
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        else
+        {
+            Debug.Log("Set disconnected to " + disconnected.ToString() + "... Awaiting disconnect from other instance");
+            yield return null;
+        }
+
+    }
+
     private IEnumerator LoadUserData()
     {
         var DBTask = DBreference.Child("users").Child(user.UserId).GetValueAsync();
@@ -150,8 +299,12 @@ public class PlayerData : MonoBehaviour
             DataSnapshot snapshot = DBTask.Result;
             bestTime = snapshot.Child("singleplayer formatted").Value.ToString();
             bestRawTime = (float)(double)snapshot.Child("singleplayer raw").GetValue(false);
+            weeklyBestTime = snapshot.Child("weekly singleplayer formatted").Value != null ? snapshot.Child("weekly singleplayer formatted").Value.ToString() : "Unattempted";
+            weeklyBestRawTime = snapshot.Child("weekly singleplayer raw").Value != null ? (float)(double)snapshot.Child("weekly singleplayer raw").GetValue(false) : float.MaxValue;
             alreadyInMatch = bool.Parse(snapshot.Child("in match").Value.ToString());
+            dailyGift = bool.Parse(snapshot.Child("daily gift").Value.ToString());
             totalInstances = int.Parse(snapshot.Child("instances").Value.ToString());
+            coins = int.Parse(snapshot.Child("coins").Value.ToString());
             friendList.Clear();
             friendRequestList.Clear();
             friendNameList.Clear();
@@ -164,6 +317,12 @@ public class PlayerData : MonoBehaviour
                     friendRequestList.Add(child.Key);
             }
             loading = false;
+            foreach (DataSnapshot child in snapshot.Child("skins").Children)
+            {
+                if (skinsList.Contains(child.Key))
+                    continue;
+                skinsList.Add(child.Key);
+            }
             yield return new WaitForSeconds(2f);
             if (!inMatch)
                 LoadFriends();
@@ -427,7 +586,7 @@ public class PlayerData : MonoBehaviour
         {
             DataSnapshot snapshot = DBTask.Result;
             int rank = 1;
-            foreach (Transform child in MenuUIManager.instance.scoreboardContent.transform)
+            foreach (Transform child in MenuUIManager.instance.globalScoreboardContent.transform)
             {
                 Destroy(child.gameObject);
             }
@@ -435,7 +594,37 @@ public class PlayerData : MonoBehaviour
             {
                 string username = childSnapshot.Child("username").Value.ToString();
                 string bestTime = childSnapshot.Child("singleplayer formatted").Value.ToString();
-                GameObject scoreboardElement = Instantiate(scoreElement, MenuUIManager.instance. scoreboardContent);
+                GameObject scoreboardElement = Instantiate(scoreElement, MenuUIManager.instance.globalScoreboardContent);
+                scoreboardElement.GetComponent<ScoreElement>().NewScoreElement(rank, username, bestTime);
+                rank++;
+            }
+        }
+    }
+
+    private IEnumerator LoadWeeklyScoreboardData()
+    {
+        var DBTask = DBreference.Child("users").OrderByChild("weekly singleplayer raw").GetValueAsync();
+
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        {
+            DataSnapshot snapshot = DBTask.Result;
+            int rank = 1;
+            foreach (Transform child in MenuUIManager.instance.weeklyScoreboardContent.transform)
+            {
+                Destroy(child.gameObject);
+            }
+            foreach (DataSnapshot childSnapshot in snapshot.Children)
+            {
+                if (childSnapshot.Child("weekly singleplayer formatted").Value == null)
+                    continue;
+                string username = childSnapshot.Child("username").Value.ToString();
+                string bestTime = childSnapshot.Child("weekly singleplayer formatted").Value.ToString();
+                GameObject scoreboardElement = Instantiate(scoreElement, MenuUIManager.instance.weeklyScoreboardContent);
                 scoreboardElement.GetComponent<ScoreElement>().NewScoreElement(rank, username, bestTime);
                 rank++;
             }
@@ -465,6 +654,31 @@ public class PlayerData : MonoBehaviour
         Debug.Log("Updated player: " + _inMatch.ToString());
     }
 
+    public void BuyCharacter(string character, int cost)
+    {
+        StartCoroutine(BuyCharacterTask(character, cost));
+    }
+    private IEnumerator BuyCharacterTask(string character, int cost)
+    {
+        var BuyTask = DBreference.Child("users").Child(user.UserId).Child("skins").Child(character).SetValueAsync(true);
+        yield return new WaitUntil(predicate: () => BuyTask.IsCompleted);
+
+        if (BuyTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {BuyTask.Exception}");
+        }
+        Debug.Log("Bought " + character);
+        var DeductTask = DBreference.Child("users").Child(user.UserId).Child("coins").SetValueAsync(coins - cost);
+        yield return new WaitUntil(predicate: () => DeductTask.IsCompleted);
+
+        if (BuyTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DeductTask.Exception}");
+        }
+        coins = coins - cost;
+        Debug.Log("Deducted " + cost.ToString() + ". Remaining: " + coins.ToString());
+    }
+
 
     public void UpdateInMatch(bool inMatch)
     {
@@ -484,6 +698,11 @@ public class PlayerData : MonoBehaviour
     public void LoadScoreboard()
     {
         StartCoroutine(LoadScoreboardData());
+    }
+
+    public void LoadWeeklyScoreboard()
+    {
+        StartCoroutine(LoadWeeklyScoreboardData());
     }
 
     public void LoadFriends()

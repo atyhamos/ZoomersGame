@@ -189,7 +189,7 @@ public class FirebaseManager : MonoBehaviour
             if (user.IsEmailVerified)
             { 
                 GameManager.instance.ChangeScene(2);
-                Debug.Log("Logging in!");
+                StartCoroutine(UpdateLogin());
             }
             else
             {
@@ -198,22 +198,151 @@ public class FirebaseManager : MonoBehaviour
         }
     }
 
+    private IEnumerator UpdateLogin()
+    {
+        var DBTask = DBreference.Child("last login time").SetValueAsync(System.DateTime.Now.DayOfYear);
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+        if (DBTask.Exception != null)
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        else
+            Debug.Log("Updated login time");
+       
+        var GiftTimeTask = DBreference.Child("tomorrow time").GetValueAsync();
+        yield return new WaitUntil(predicate: () => GiftTimeTask.IsCompleted);
+        if (GiftTimeTask.Exception != null)
+            Debug.LogWarning(message: $"Failed to register task with {GiftTimeTask.Exception}");
+        else
+        {
+            bool updated = false;
+            Debug.Log("Retrieved tomorrow gift refresh time");
+            int tomorrowTime = int.Parse(GiftTimeTask.Result.Value.ToString());
+            while (tomorrowTime - System.DateTime.Now.DayOfYear <= 0)
+            {
+                tomorrowTime += 1;
+                updated = true;
+            }
+            if (updated)
+            {
+                DBTask = DBreference.Child("tomorrow time").SetValueAsync(tomorrowTime);
+                yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+                if (DBTask.Exception != null)
+                    Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+                else
+                    Debug.Log("Updated tomorrow gift refresh time");
+                StartCoroutine(ResetGifts());
+            }
+        }
+        var LeaderboardTimeTask = DBreference.Child("refresh leaderboard time").GetValueAsync();
+        yield return new WaitUntil(predicate: () => LeaderboardTimeTask.IsCompleted);
+        if (LeaderboardTimeTask.Exception != null)
+            Debug.LogWarning(message: $"Failed to register task with {LeaderboardTimeTask.Exception}");
+        else
+        {
+            bool updated = false;
+            Debug.Log("Retrieved leaderboard refresh time");
+            int refreshTime = int.Parse(LeaderboardTimeTask.Result.Value.ToString());
+            while (refreshTime - System.DateTime.Now.DayOfYear <= 7)
+            {
+                refreshTime += 7;
+                updated = true;
+            }
+            if (updated)
+            {
+                DBTask = DBreference.Child("refresh leaderboard time").SetValueAsync(refreshTime);
+                yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+                if (DBTask.Exception != null)
+                    Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+                else
+                    Debug.Log("Updated leaderboard refresh time");
+                StartCoroutine(ResetLeaderboard());
+            }
+        }
+    }
+
+    private IEnumerator ResetGifts()
+    {
+        var DBTask = DBreference.Child("users").GetValueAsync();
+
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        else
+        {
+            DataSnapshot snapshot = DBTask.Result;
+            foreach (DataSnapshot childSnapshot in snapshot.Children)
+            {
+                DBreference.Child("users").Child(childSnapshot.Key).Child("daily gift").SetValueAsync(true);
+            }
+        }
+    }
+
+    private IEnumerator ResetLeaderboard()
+    {
+        var DBTask = DBreference.Child("users").GetValueAsync();
+
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        else
+        {
+            DataSnapshot snapshot = DBTask.Result;
+            foreach (DataSnapshot childSnapshot in snapshot.Children)
+            {
+                DBreference.Child("users").Child(childSnapshot.Key).Child("weekly singleplayer raw").RemoveValueAsync();
+                DBreference.Child("users").Child(childSnapshot.Key).Child("weekly singleplayer formatted").RemoveValueAsync();
+            }
+        }
+    }
+
     private IEnumerator RegisterLogic(string _username, string _email, string _password, string _confirmPassword)
     {
         if (_username == "")
+        {
             registerOutputText.text = "Please enter a username";
+            yield return null;
+        }
         else if (_username.Length > 15)
+        {
             registerOutputText.text = "Username cannot exceed 15 characters";
+            yield return null;
+        }
+        else if (_password != _confirmPassword)
+        {
+            registerOutputText.text = "Passwords do not match";
+            usernameChecked = false;
+            yield return null;
+        }
         else
         {
-            StartCoroutine(CheckUsername(_username));
-            yield return new WaitUntil(predicate: () => usernameChecked);
-            if (usernameInUse)
-                registerOutputText.text = "Username is already in use";
-            else if (_password != _confirmPassword)
-                registerOutputText.text = "Passwords do not match";
+            var checkUsernameTask = DBreference.Child("users").OrderByChild("username").GetValueAsync();
+
+            yield return new WaitUntil(predicate: () => checkUsernameTask.IsCompleted);
+
+            if (checkUsernameTask.Exception != null)
+            {
+                Debug.LogWarning(message: $"Failed to register task with {checkUsernameTask.Exception}");
+            }
             else
             {
+                DataSnapshot snapshot = checkUsernameTask.Result;
+                foreach (DataSnapshot childSnapshot in snapshot.Children)
+                {
+                    if (_username == childSnapshot.Child("username").GetValue(false).ToString())
+                    {
+                        // username in use
+                        registerOutputText.text = "Username is already in use";
+                        yield break;
+                    }
+                    else
+                        continue;
+                }    
+                // username not in use
                 var registerTask = auth.CreateUserWithEmailAndPasswordAsync(_email, _password);
 
                 yield return new WaitUntil(predicate: () => registerTask.IsCompleted);

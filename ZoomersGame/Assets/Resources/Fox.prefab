@@ -3470,6 +3470,11 @@ MonoBehaviour:
   - {fileID: 9100000, guid: f0b68ebd488a80d4886789eba9fe4df5, type: 2}
   - {fileID: 9100000, guid: c5d03be4cd8289c448441eb0808bdb84, type: 2}
   - {fileID: 9100000, guid: 27d4c9ad762642f4f87d425e2ca4ca91, type: 2}
+  - {fileID: 9100000, guid: e60a6d20ce012b34891cca2c12738b0e, type: 2}
+  - {fileID: 9100000, guid: 6e90581dbb74443498577964da2bb453, type: 2}
+  - {fileID: 9100000, guid: 248e6de964c313248815d5c980c3fb45, type: 2}
+  - {fileID: 9100000, guid: bd5c3826fd9bd0047a8fe20133d5a573, type: 2}
+  - {fileID: 9100000, guid: 93eb63d58a80d7f49a40c85e73ca7557, type: 2}
   wings: {fileID: 886058512857661798}
   particles: {fileID: 8536020750011992467}
 --- !u!114 &7063245382834786212

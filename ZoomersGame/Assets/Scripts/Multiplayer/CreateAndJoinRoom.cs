@@ -20,6 +20,8 @@ public class CreateAndJoinRoom : MonoBehaviourPunCallbacks
     [SerializeField] private Text joinMessage;
     [SerializeField] private Text randomMessage;
 
+    [SerializeField] private Button signOutButton, createButton, joinButton, randomButton;
+
 
     private void Awake()
     {
@@ -54,6 +56,7 @@ public class CreateAndJoinRoom : MonoBehaviourPunCallbacks
         if (PlayerData.instance.alreadyInMatch)
         {
             randomMessage.text = "You are already running a separate instance of the game!";
+            signOutButton.gameObject.SetActive(true);
         }
         else
         {
@@ -85,6 +88,7 @@ public class CreateAndJoinRoom : MonoBehaviourPunCallbacks
             if (PlayerData.instance.alreadyInMatch)
             {
                 createMessage.text = "You are already running a separate instance of the game!";
+                signOutButton.gameObject.SetActive(true);
             }
             else
             {
@@ -92,6 +96,32 @@ public class CreateAndJoinRoom : MonoBehaviourPunCallbacks
                 PhotonNetwork.CreateRoom(createInput.text, new RoomOptions() { MaxPlayers = 4 }, null);
             }
         }
+    }
+
+    public void ForceSignOut()
+    {
+        AudioManager.instance.ButtonPress();
+        signOutButton.gameObject.SetActive(false);
+        PlayerData.instance.StartCoroutine("DisconnectActionDB", true);
+        PlayerData.instance.UpdateInMatch(false);
+        createMessage.text = "Disconnecting other instances... Try again in a few seconds";
+        joinMessage.text = "Disconnecting other instances... Try again in a few seconds";
+        randomMessage.text = "Disconnecting other instances... Try again in a few seconds";
+        StartCoroutine(ButtonDeactivate());
+    }
+
+    private IEnumerator ButtonDeactivate()
+    {
+        createButton.interactable = false;
+        joinButton.interactable = false;
+        randomButton.interactable = false;
+        yield return new WaitForSeconds(10f);
+        createButton.interactable = true;
+        joinButton.interactable = true;
+        randomButton.interactable = true;
+        createMessage.text = "Successfully disconnected other instasnces";
+        joinMessage.text = "Successfully disconnected other instasnces";
+        randomMessage.text = "Successfully disconnected other instasnces";
     }
 
     public override void OnCreateRoomFailed(short returnCode, string message)
@@ -123,6 +153,7 @@ public class CreateAndJoinRoom : MonoBehaviourPunCallbacks
         if (PlayerData.instance.alreadyInMatch)
         {
             joinMessage.text = "You are already running a separate instance of the game!";
+            signOutButton.gameObject.SetActive(true);
         }
         else
         {
