@@ -27,8 +27,7 @@ public class FirebaseManager : MonoBehaviour
     [SerializeField] private TMP_InputField registerPassword;
     [SerializeField] private TMP_InputField registerConfirmPassword;
     [SerializeField] private TMP_Text registerOutputText;
-    private bool usernameChecked = false;
-    private bool usernameInUse = false;
+
     [Space(5f)]
 
     [Header("Reset Password References")]
@@ -241,7 +240,7 @@ public class FirebaseManager : MonoBehaviour
             bool updated = false;
             Debug.Log("Retrieved leaderboard refresh time");
             int refreshTime = int.Parse(LeaderboardTimeTask.Result.Value.ToString());
-            while (refreshTime - System.DateTime.Now.DayOfYear <= 7)
+            while (refreshTime - System.DateTime.Now.DayOfYear <= 0)
             {
                 refreshTime += 7;
                 updated = true;
@@ -315,7 +314,6 @@ public class FirebaseManager : MonoBehaviour
         else if (_password != _confirmPassword)
         {
             registerOutputText.text = "Passwords do not match";
-            usernameChecked = false;
             yield return null;
         }
         else
@@ -547,35 +545,5 @@ public class FirebaseManager : MonoBehaviour
             Debug.LogWarning(message: $"Failed to register task with {DBTaskFormat.Exception}");
         }
         Debug.Log($"Formatted time updated to {_formatted}");
-    }
-
-
-    private IEnumerator CheckUsername(string _username)
-    {
-        var DBTask = DBreference.Child("users").OrderByChild("username").GetValueAsync();
-
-        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
-
-        if (DBTask.Exception != null)
-        {
-            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
-        }
-        else
-        {
-            DataSnapshot snapshot = DBTask.Result;
-            foreach (DataSnapshot childSnapshot in snapshot.Children)
-            {
-                if (_username == childSnapshot.Child("username").GetValue(false).ToString())
-                {
-                    usernameChecked = true;
-                    usernameInUse = true;
-                    yield return null;
-                }
-                else
-                    continue;
-            }
-            usernameChecked = true;
-            usernameInUse = false;
-        }
     }
 }

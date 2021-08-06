@@ -13,6 +13,7 @@ public class MenuControl : MonoBehaviourPunCallbacks
     [SerializeField] private Text playerStats;
     [SerializeField] private Text leaderBoard;
     private string userName;
+    private bool loggingOut;
 
     private void Awake()
     {
@@ -38,6 +39,7 @@ public class MenuControl : MonoBehaviourPunCallbacks
     {
         playerStats.text = PlayerData.instance.bestTime;
         leaderBoard.text = PlayerData.instance.leaderName + $" ({PlayerData.instance.leaderTime})";
+        loggingOut = false;
     }
     private void Update()
     {
@@ -68,14 +70,18 @@ public class MenuControl : MonoBehaviourPunCallbacks
 
         PhotonNetwork.Disconnect();
         Destroy(PlayerData.instance);
+        GameManager.instance.ChangeScene(1);
+        loggingOut = true;
     }
 
 
     public override void OnDisconnected(DisconnectCause cause)
     {
-        GameManager.instance.ChangeScene(0);
         Debug.Log(userName + " has signed out");
         PlayerData.instance.UpdateInMatch(false);
+        if (loggingOut)
+            return;
+        GameManager.instance.ChangeScene(2);
         base.OnDisconnected(cause);
     }
 
