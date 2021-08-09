@@ -19,11 +19,10 @@ public class MenuUIManager : MonoBehaviour
     [SerializeField] private Text coinCount;
     [SerializeField] private Button mushroom, radish, pig, slime, zoomerFox, rewardButton;
     [SerializeField] private GameObject mushroomUI, radishUI, pigUI, slimeUI, foxUI;
-    private bool mushroomOpen, radishOpen, pigOpen, slimeOpen, foxOpen;
+    [SerializeField] private Toggle bgmToggle, soundFXToggle;
     [SerializeField] private GameObject insufficient, gift;
-
-    public Toggle bgmToggle, soundFXToggle;
-    public bool menuOpen;
+    private bool mushroomOpen, radishOpen, pigOpen, slimeOpen, foxOpen;
+    private bool menuOpen;
     public Transform weeklyScoreboardContent, globalScoreboardContent;
 
     private void Awake()
@@ -246,7 +245,7 @@ public class MenuUIManager : MonoBehaviour
                 }
                 slimeOpen = !slimeOpen;
                 break;
-            case "Fox":
+            case "Zoomer Fox":
                 if (foxOpen)
                 {
                     AudioManager.instance.MenuClose();
@@ -255,7 +254,7 @@ public class MenuUIManager : MonoBehaviour
                 else
                 {
                     AudioManager.instance.ButtonPress();
-                    if (PlayerData.instance.friendList.Count < 10)
+                    if (PlayerData.instance.friendList.Count < 5)
                     {
                         Instantiate(insufficient);
                         Debug.Log("Insufficient friends! You have " + PlayerData.instance.friendList.Count + " friends.");

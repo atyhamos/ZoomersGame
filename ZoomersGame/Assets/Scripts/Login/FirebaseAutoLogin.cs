@@ -187,8 +187,16 @@ public class FirebaseAutoLogin : MonoBehaviour
                     if (counter > 0)
                     {
                         // Get coins based off your position
-                        DBreference.Child("users").Child(childSnapshot.Key).Child("coins").SetValueAsync(int.Parse(childSnapshot.Child("coins").Value.ToString()) + counter * 20);
-                        counter--;
+                        var UpdateCoinTask = DBreference.Child("users").Child(childSnapshot.Key).Child("coins").SetValueAsync(int.Parse(childSnapshot.Child("coins").Value.ToString()) + counter * 10);
+                        yield return new WaitUntil(predicate: () => UpdateCoinTask.IsCompleted);
+                        if (UpdateCoinTask.Exception != null)
+                        {
+                            Debug.LogWarning(message: $"Failed to register task with {UpdateCoinTask.Exception}");
+                        }
+                        else
+                        {
+                            counter--;
+                        }
                     }
                 }
                 DBreference.Child("users").Child(childSnapshot.Key).Child("weekly singleplayer raw").RemoveValueAsync();

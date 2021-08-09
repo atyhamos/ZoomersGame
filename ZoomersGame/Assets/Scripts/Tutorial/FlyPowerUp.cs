@@ -6,13 +6,9 @@ public class FlyPowerUp : PowerUp
 {
 
     [SerializeField] private GameObject powerButton;
-
-    public float flyForce = 1.3f;
-
+    [SerializeField] private float flyForce = 1.3f;
     private float flyTime = 5f;
-
     private bool canFly = false;
-
     private Coroutine co;
 
     public override void Consume()

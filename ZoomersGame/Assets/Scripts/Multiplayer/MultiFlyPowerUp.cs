@@ -4,12 +4,9 @@ using UnityEngine;
 
 public class MultiFlyPowerUp : MultiPowerUp
 {
-    public float flyForce = 1.3f;
-
+    [SerializeField] private float flyForce = 1.3f;
     private float flyTime = 4f;
-
     private bool canFly = false;
-
     private Coroutine co;
 
     public override void Consume()

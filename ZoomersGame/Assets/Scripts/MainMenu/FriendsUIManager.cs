@@ -6,12 +6,13 @@ using UnityEngine.UI;
 
 public class FriendsUIManager : MonoBehaviour
 {
-    public GameObject friendsUI, addFriendsUI;
-    public bool friendsOpen, addFriendsOpen;
-    public Transform friendsContent;
     public static FriendsUIManager instance;
+    
+    [SerializeField] private GameObject friendsUI, addFriendsUI;
+    private bool friendsOpen, addFriendsOpen;
     public TMP_InputField friendNameInput;
     public Text addFriendMessage;
+    public Transform friendsContent;
 
 
     private void Awake()

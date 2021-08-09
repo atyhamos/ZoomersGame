@@ -7,9 +7,6 @@ public class MultiBoxPowerUp : MultiPowerUp
 {
 
     [SerializeField] private GameObject prefabBox;
-    private Rigidbody2D boxRb;
-    private Transform boxPlacement;
-
     public override void Consume()
     {
         Debug.Log("Placed box!");

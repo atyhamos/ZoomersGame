@@ -6,9 +6,9 @@ using TMPro;
 public class ScoreElement : MonoBehaviour
 {
 
-    public TMP_Text rankText;
-    public TMP_Text usernameText;
-    public TMP_Text singleplayerTimeText;
+    [SerializeField] private TMP_Text rankText;
+    [SerializeField] private TMP_Text usernameText;
+    [SerializeField] private TMP_Text singleplayerTimeText;
 
 
     public void NewScoreElement(int rank, string _username, string _singleplayerTime)

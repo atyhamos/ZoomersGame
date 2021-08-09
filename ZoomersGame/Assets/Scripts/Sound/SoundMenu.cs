@@ -5,9 +5,9 @@ using UnityEngine.UI;
 
 public class SoundMenu : MonoBehaviour
 {
-    public Toggle bgmToggle, soundFXToggle;
-    public GameObject menuUI;
-    public bool menuOpen = false;
+    [SerializeField] private Toggle bgmToggle, soundFXToggle;
+    [SerializeField] private GameObject menuUI;
+    private bool menuOpen = false;
 
     // Start is called before the first frame update
     void Start()

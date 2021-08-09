@@ -8,14 +8,14 @@ public class PlayerController2D : MonoBehaviour
 {
     [SerializeField] Animator animator;
     [SerializeField] CharacterController2D controller;
-    Rigidbody2D rb;
+    private bool moveLeft, moveRight, jump, crouch;
+    private int horizontalMove;
+    private Rigidbody2D rb;
     public GameObject PlayerCamera, PlayerButtons, nameBackground, wings, particles;
+    public bool jumpButtonDown;
     public Text PlayerNameText;
     public bool hasPowerUp, usingPowerUp;
     public PowerUp previousPowerUp, currentPowerUp;
-    public bool moveLeft, moveRight, jump, crouch;
-    private int horizontalMove;
-    public bool jumpButtonDown;
 
     void Start()
     {

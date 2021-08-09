@@ -33,6 +33,7 @@ public class MenuControl : MonoBehaviourPunCallbacks
             welcomeMessage.text = $"Welcome, {userName}!";
 
         PhotonNetwork.NickName = userName;
+        welcomeMessage.text += $" You are connected to Asia server.";
     }
 
     private void Start()

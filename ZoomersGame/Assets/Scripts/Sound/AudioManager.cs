@@ -4,13 +4,11 @@ using System;
 
 public class AudioManager : MonoBehaviour
 {
-    public Sound[] sounds;
-
     public static AudioManager instance;
-
-    public Sound currentBgm;
-
+    [SerializeField] private Sound[] sounds;
+    private Sound currentBgm;
     private bool bgmOn = true, soundEffectsOn = true;
+
 
     // Start is called before the first frame update
     void Awake()

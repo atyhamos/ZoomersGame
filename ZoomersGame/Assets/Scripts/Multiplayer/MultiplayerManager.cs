@@ -9,7 +9,7 @@ using Photon.Realtime;
 
 public class MultiplayerManager : MonoBehaviourPunCallbacks
 {
-    public Transform map1Spawn, map2Spawn;
+    [SerializeField] private Transform map1Spawn, map2Spawn;
     [SerializeField] private Text PingText;
     [SerializeField] private GameObject PlayerPrefab, PlayerElement;
     [SerializeField] private GameObject rejoinUI, loseUI, startUI, readyUI, winUI, rulesUI, winnerUI, skinsUI, skinsButton, friendsButton, menuUI, menuButton, countdown;
@@ -19,25 +19,25 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     [SerializeField] private Text countdownText;
     [SerializeField] private GameObject Checkpoints;
     [SerializeField] private TMP_InputField winsInput;
-    public Toggle bgmToggle, soundFXToggle;
-    public int winsNeeded = 5, mapIndex = 0;
-    public string winnerName;
-    public Button startButton, readyButton, saveButton, mushroom, radish, pig, slime, zoomerFox;
+    [SerializeField] private Button startButton, saveButton, mushroom, radish, pig, slime, zoomerFox;
+    [SerializeField] private Toggle bgmToggle, soundFXToggle;
     private Player[] playerList;
     private Vector2 spawnPosition, respawnLocation;
-    private string roomCode, playersNotReady;
+    private string playersNotReady;
     private MultiplayerController player;
     private int pingUpdate = 1; // 1 second
+    private float countdownUntil = 3f;
+    private bool rulesOpen, skinsOpen, menuOpen;
+    private int skinIndex;
+    public RuntimeAnimatorController skin;
+    public int winsNeeded = 5, mapIndex = 0;
+    public string winnerName;
     public List<MultiplayerController> racersArray, racersScores;
     public static MultiplayerManager instance;
     public bool isRacing;
-    private float countdownUntil = 3f;
     public bool inLobby, allPrepared = false;
     public MultiplayerController leadPlayer;
-    private bool rulesOpen, skinsOpen, menuOpen;
-    private PhotonView view;
-    public RuntimeAnimatorController skin;
-    private int skinIndex;
+    public Button readyButton;
 
     private void Awake()
     {
@@ -50,7 +50,6 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     private void Start()
     {
         SpawnPlayer();
-        roomCode = PhotonNetwork.CurrentRoom.Name;
         GameManager.instance.rejoinCode = "";
         startButton.image.color = Color.green;
         readyButton.image.color = Color.grey;
@@ -79,7 +78,6 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
     {
         spawnPosition = map1Spawn.position;
         player = PhotonNetwork.Instantiate(PlayerPrefab.name, lobbySpawnLocation.position, Quaternion.identity).gameObject.GetComponent<MultiplayerController>();
-        view = GetComponent<PhotonView>();
     }
     public void ToggleBGM()
     {
@@ -108,6 +106,8 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         }
         if (inLobby)
         {
+            PhotonNetwork.CurrentRoom.IsOpen = true;
+            PhotonNetwork.CurrentRoom.IsVisible = true;
             countdown.SetActive(false);
             loseUI.SetActive(false);
             player.HideWings();
@@ -428,8 +428,6 @@ public class MultiplayerManager : MonoBehaviourPunCallbacks
         player.isReady = false;
         player.EnterLobby();
         Checkpoints.SetActive(true);
-        PhotonNetwork.CurrentRoom.IsOpen = true;
-        PhotonNetwork.CurrentRoom.IsVisible = true;
     }
 
     public void ClearUI()

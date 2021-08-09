@@ -6,9 +6,9 @@ using UnityEngine.UI;
 
 public class PlayerElement : MonoBehaviour
 {
-    public TMP_Text usernameText;
-    public Button AddFriend;
-    public TMP_Text friendsAlready;
+    [SerializeField] private TMP_Text usernameText;
+    [SerializeField] private Button AddFriend;
+    [SerializeField] private TMP_Text friendsAlready;
     public void NewPlayerElement(string _username)
     {
         usernameText.text = _username;

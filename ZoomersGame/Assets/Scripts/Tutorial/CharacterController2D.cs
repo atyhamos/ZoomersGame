@@ -3,32 +3,35 @@ using UnityEngine.Events;
 
 public class CharacterController2D : MonoBehaviour
 {
-	public float maxSpeed = 400f;
-	[SerializeField] private float jumpForce = 400f;							// Amount of force added when the player jumps.
-	[Range(0, 1)] [SerializeField] private float slideSpeed = .36f;			// Amount of maxSpeed applied to crouching movement. 1 = 100%
-	[SerializeField] private Transform groundCheck;							// A position marking where to check if the player is grounded.
+	[SerializeField] private float jumpForce = 400f;                            // Amount of force added when the player jumps.
+	[Range(0, 1)] [SerializeField] private float slideSpeed = .36f;         // Amount of maxSpeed applied to crouching movement. 1 = 100%
+	[SerializeField] private Transform groundCheck;                         // A position marking where to check if the player is grounded.
 	[SerializeField] private Transform ceilingCheck;                            // A position marking where to check for ceilings
-	[SerializeField] private Transform frontCheck;                            // A position marking where to check for front of player
-	[SerializeField] private Collider2D crouchDisableCollider;              // A collider that will be disabled when crouching
-	[SerializeField] private Collider2D crouchEnableCollider;              // A collider that will be enabled when crouching
+	[SerializeField] private Transform frontCheck;                            // A position marking where to check for front of 
+	[SerializeField] private Collider2D standingCollider;              // A collider that will be disabled when crouching
+	[SerializeField] private Collider2D crouchCollider;              // A collider that will be enabled when crouching
 	[SerializeField] private LayerMask m_WhatIsGround;
 	[SerializeField] private LayerMask m_WhatIsWall;
-	const float groundedRadius = .3f; // Radius of the overlap circle to determine if grounded
-	public bool isGrounded;            // Whether or not the player is grounded.
+	[SerializeField] private Animator anim;
+	[SerializeField] private float wallSlidingSpeed;
+	[SerializeField] private Transform particles;
+	private const float groundedRadius = .3f; // Radius of the overlap circle to determine if grounded
+	private const float ceilingRadius = .0625f; // Radius of the overlap circle to determine if the player can stand up
 	private bool canDoubleJump;
-	const float ceilingRadius = .0625f; // Radius of the overlap circle to determine if the player can stand up
-	public Rigidbody2D rb;
-	private  bool m_FacingRight = true;  // For determining which way the player is currently facing.
-	public bool isTouchingFront; // Checking if there is something in front
+	private bool m_FacingRight = true;  // For determining which way the player is currently facing.
+	private bool isTouchingFront; // Checking if there is something in front
 	private bool wallSliding;
 	private bool canWallJump = true;
-	[SerializeField] private float wallSlidingSpeed;
-	const float frontRadius = .2f; // Radius of the overlap circle to determine if player has wall in front
+	private const float frontRadius = .2f; // Radius of the overlap circle to determine if player has wall in front
 	private float slideTimer = 0f;
-	public UnityEvent OnLandEvent;
+	private float accelRatePerSec;
+	private float forwardVelocity;
+	public bool isGrounded;            // Whether or not the player is grounded.
 	public float timeZeroToMaxSpeed = 1f;
-	float accelRatePerSec;
-	float forwardVelocity;
+	public UnityEvent OnLandEvent;
+	public Transform trapPlacement;
+	public Rigidbody2D rb;
+	public float maxSpeed = 400f;
 
 	[System.Serializable]
 	public class BoolEvent : UnityEvent<bool> { }
@@ -97,8 +100,8 @@ public class CharacterController2D : MonoBehaviour
 				{
 					slideTimer = 0;
 					isSliding = false;
-					crouchDisableCollider.enabled = true;
-					crouchEnableCollider.enabled = false;
+					standingCollider.enabled = true;
+					crouchCollider.enabled = false;
 					OnSlideEvent.Invoke(false);
 				}
 			}
@@ -108,10 +111,10 @@ public class CharacterController2D : MonoBehaviour
 		if (crouch && isGrounded)
 		{
 			// Disable one of the colliders when sliding
-			if (crouchDisableCollider != null)
+			if (crouchCollider != null)
             {
-				crouchEnableCollider.enabled = true;
-				crouchDisableCollider.enabled = false;
+				crouchCollider.enabled = true;
+				standingCollider.enabled = false;
             }
 			
 			// start the slide timer
@@ -138,8 +141,8 @@ public class CharacterController2D : MonoBehaviour
 					{
 						slideTimer = 0;
 						isSliding = false;
-						crouchDisableCollider.enabled = true;
-						crouchEnableCollider.enabled = false;
+						standingCollider.enabled = true;
+						crouchCollider.enabled = false;
 						OnSlideEvent.Invoke(false);
 					}
 				}

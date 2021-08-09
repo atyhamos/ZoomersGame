@@ -291,8 +291,28 @@ public class FirebaseManager : MonoBehaviour
         else
         {
             DataSnapshot snapshot = DBTask.Result;
+            int counter = 10;
             foreach (DataSnapshot childSnapshot in snapshot.Children)
             {
+                if (childSnapshot.Child("weekly singleplayer raw").Value == null)
+                    continue;
+                else
+                {
+                    if (counter > 0)
+                    {
+                        // Get coins based off your position
+                        var UpdateCoinTask = DBreference.Child("users").Child(childSnapshot.Key).Child("coins").SetValueAsync(int.Parse(childSnapshot.Child("coins").Value.ToString()) + counter * 10);
+                        yield return new WaitUntil(predicate: () => UpdateCoinTask.IsCompleted);
+                        if (UpdateCoinTask.Exception != null)
+                        {
+                            Debug.LogWarning(message: $"Failed to register task with {UpdateCoinTask.Exception}");
+                        }
+                        else
+                        {
+                            counter--;
+                        }
+                    }
+                }
                 DBreference.Child("users").Child(childSnapshot.Key).Child("weekly singleplayer raw").RemoveValueAsync();
                 DBreference.Child("users").Child(childSnapshot.Key).Child("weekly singleplayer formatted").RemoveValueAsync();
             }
@@ -488,6 +508,13 @@ public class FirebaseManager : MonoBehaviour
             Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
         }
 
+        DBTask = DBreference.Child("users").Child(user.UserId).Child("daily gift").SetValueAsync(true);
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
         DBTask = DBreference.Child("users").Child(user.UserId).Child("singleplayer formatted").SetValueAsync("Have not attempted");
         yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
 
@@ -511,6 +538,41 @@ public class FirebaseManager : MonoBehaviour
         {
             Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
         }
+        DBTask = DBreference.Child("users").Child(user.UserId).Child("skins").Child("Fox").SetValueAsync(true);
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        DBTask = DBreference.Child("users").Child(user.UserId).Child("skins").Child("Mask Dude").SetValueAsync(true);
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        DBTask = DBreference.Child("users").Child(user.UserId).Child("skins").Child("Ninja Frog").SetValueAsync(true);
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        DBTask = DBreference.Child("users").Child(user.UserId).Child("skins").Child("Pink Man").SetValueAsync(true);
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+        DBTask = DBreference.Child("users").Child(user.UserId).Child("skins").Child("Virtual Guy").SetValueAsync(true);
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
 
         DBTask = DBreference.Child("users").Child(user.UserId).Child("userID").SetValueAsync(user.UserId);
         yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
@@ -521,6 +583,15 @@ public class FirebaseManager : MonoBehaviour
         }
 
         DBTask = DBreference.Child("users").Child(user.UserId).Child("instances").SetValueAsync(0);
+        yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+        }
+
+
+        DBTask = DBreference.Child("users").Child(user.UserId).Child("disconnected").SetValueAsync(false);
         yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
 
         if (DBTask.Exception != null)

@@ -7,8 +7,8 @@ public class MultiBoundsCheck : MonoBehaviour
 {
     public static MultiBoundsCheck instance;
     [SerializeField] private float extraAllowance = 2;
-    float verticalExtent;
-    float horizontalExtent;
+    private float verticalExtent;
+    private float horizontalExtent;
 
     private void Awake()
     {

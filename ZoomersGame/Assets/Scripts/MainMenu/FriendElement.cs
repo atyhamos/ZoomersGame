@@ -8,17 +8,21 @@ using Photon.Pun;
 public class FriendElement : MonoBehaviour
 {
 
-    public TMP_Text usernameText;
-    public TMP_Text statusText;
-    public Button Accept;
-    public Button Reject;
-    public Button Invite;
-    public Button Remove;
+    [SerializeField] private TMP_Text usernameText;
+    [SerializeField] private TMP_Text statusText;
+    [SerializeField] private Button Accept;
+    [SerializeField] private Button Reject;
+    [SerializeField] private Button Invite;
+    [SerializeField] private Button Remove;
     private string userId;
     public void NewFriendElement(string _username, string _status, string userId)
     {
         usernameText.text = _username;
-        statusText.text = _status.ToString();
+        if (_status == "Online")
+            statusText.color = Color.green;
+        else
+            statusText.color = Color.red;
+        statusText.text = _status;
         this.userId = userId;
         if (!PlayerData.instance.inMatch)
             Remove.gameObject.SetActive(true);
@@ -26,8 +30,12 @@ public class FriendElement : MonoBehaviour
 
     public void NewFriendReqElement(string _username, string _status, string userId)
     {
-        usernameText.text = _username;
-        statusText.text = _status.ToString();
+        usernameText.text = _username; 
+        if (_status == "Online")
+            statusText.color = Color.green;
+        else
+            statusText.color = Color.red;
+        statusText.text = _status;
         this.userId = userId;
         Accept.gameObject.SetActive(true);
         Reject.gameObject.SetActive(true);
@@ -36,7 +44,11 @@ public class FriendElement : MonoBehaviour
     public void NewFriendElementInMatch(string _username, string _status, string userId)
     {
         usernameText.text = _username;
-        statusText.text = _status.ToString();
+        if (_status == "Online")
+            statusText.color = Color.green;
+        else
+            statusText.color = Color.red;
+        statusText.text = _status;
         this.userId = userId;
         Invite.gameObject.SetActive(true);
 

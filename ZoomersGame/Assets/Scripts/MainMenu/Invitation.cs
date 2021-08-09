@@ -5,14 +5,16 @@ using UnityEngine.UI;
 
 public class Invitation : MonoBehaviour
 {
-    public string username;
-    public string roomCode;
+    private string username;
+    private string roomCode;
     public Text invitationMessage;
 
     public void NewInvitation(string username, string roomCode)
     {
+        Debug.Log(username);
+        Debug.Log(roomCode);
         AudioManager.instance.MenuOpen();
-        invitationMessage.text = $"{username} is inviting you to join a room";
+        invitationMessage.text = username + " is inviting you to join a room";
         this.username = username;
         this.roomCode = roomCode;
     }

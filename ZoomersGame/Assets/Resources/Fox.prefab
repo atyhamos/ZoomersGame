@@ -3439,31 +3439,10 @@ MonoBehaviour:
   BoxPowerButton: {fileID: 8644046709257211263}
   FlyPowerButton: {fileID: 3853422950043710787}
   LeftRightButtons: {fileID: 2419465035198302374}
-  PlayerCamera: {fileID: 8257042215974051966}
-  LeaderCamera: {fileID: 0}
   PlayerButtons: {fileID: 4948778271178456815}
   PlaceholderButtons: {fileID: 5254312606389740377}
-  PlayerNameText: {fileID: 8257042216213247536}
   nameBackground: {fileID: 7219880388668606268}
   Sprite: {fileID: 8257042215642085569}
-  usingPowerUp: 0
-  previousPowerUp: {fileID: 0}
-  currentPowerUp: {fileID: 0}
-  moveLeft: 0
-  moveRight: 0
-  jump: 0
-  crouch: 0
-  checkpointsCrossed: 0
-  currentCheckpoint: {fileID: 0}
-  rank: 0
-  wins: 0
-  Manager: {fileID: 0}
-  isReady: 0
-  isHost: 0
-  isLoading: 0
-  lostRound: 0
-  hasWon: 0
-  jumpButtonDown: 0
   skins:
   - {fileID: 9100000, guid: e29978cbaa4f7473983d2ec3dc72f941, type: 2}
   - {fileID: 9100000, guid: 55b0364bb08e18149918c58aacc0b0b3, type: 2}
@@ -3475,8 +3454,24 @@ MonoBehaviour:
   - {fileID: 9100000, guid: 248e6de964c313248815d5c980c3fb45, type: 2}
   - {fileID: 9100000, guid: bd5c3826fd9bd0047a8fe20133d5a573, type: 2}
   - {fileID: 9100000, guid: 93eb63d58a80d7f49a40c85e73ca7557, type: 2}
+  previousPowerUp: {fileID: 0}
+  currentPowerUp: {fileID: 0}
+  isReady: 0
+  isHost: 0
+  isLoading: 0
+  lostRound: 0
+  hasWon: 0
+  jumpButtonDown: 0
+  rank: 0
+  wins: 0
+  currentCheckpoint: {fileID: 0}
+  checkpointsCrossed: 0
+  usingPowerUp: 0
+  PlayerNameText: {fileID: 8257042216213247536}
   wings: {fileID: 886058512857661798}
   particles: {fileID: 8536020750011992467}
+  PlayerCamera: {fileID: 8257042215974051966}
+  LeaderCamera: {fileID: 0}
 --- !u!114 &7063245382834786212
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3489,7 +3484,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90d43507f8c05db4aaad9b9f3f648b09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxSpeed: 14
   jumpForce: 26
   slideSpeed: 0.8
   groundCheck: {fileID: 8257042215530433263}
@@ -3504,11 +3498,10 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 512
   anim: {fileID: 8257042215642085574}
-  isGrounded: 0
-  canDoubleJump: 0
-  rb: {fileID: 0}
-  isTouchingFront: 0
   wallSlidingSpeed: 2
+  particles: {fileID: 3943880042810429614}
+  isGrounded: 0
+  timeZeroToMaxSpeed: 1
   OnLandEvent:
     m_PersistentCalls:
       m_Calls:
@@ -3524,9 +3517,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  timeZeroToMaxSpeed: 1
   trapPlacement: {fileID: 851838549923909764}
-  particles: {fileID: 3943880042810429614}
+  rb: {fileID: 0}
+  maxSpeed: 14
   OnSlideEvent:
     m_PersistentCalls:
       m_Calls:

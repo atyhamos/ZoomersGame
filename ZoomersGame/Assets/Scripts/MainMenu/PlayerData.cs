@@ -9,6 +9,10 @@ using UnityEngine.UI;
 public class PlayerData : MonoBehaviour
 {
     public static PlayerData instance;
+    [SerializeField] private GameObject scoreElement;
+    [SerializeField] private GameObject friendElement;
+    [SerializeField] private GameObject invitation, disconnectedAlert;
+    
     public string bestTime, weeklyBestTime;
     public float bestRawTime, weeklyBestRawTime;
     public bool inMatch = false, alreadyInMatch = false;
@@ -18,9 +22,6 @@ public class PlayerData : MonoBehaviour
     public List<string> friendList, friendRequestList, friendNameList, skinsList;
     public TMP_InputField friendNameInput;
     public Text addFriendMessage;
-    [SerializeField] private GameObject scoreElement;
-    [SerializeField] private GameObject friendElement;
-    [SerializeField] private GameObject invitation, disconnectedAlert;
     public FirebaseUser user;
     public DatabaseReference DBreference;
     public int totalInstances, coins;
@@ -185,8 +186,8 @@ public class PlayerData : MonoBehaviour
 
     public void ReceiveGift()
     {
-        StartCoroutine(ReceiveGiftDatabase());
         coins += 10;
+        StartCoroutine(ReceiveGiftDatabase());
     }
 
     private IEnumerator ReceiveGiftDatabase()
@@ -202,7 +203,7 @@ public class PlayerData : MonoBehaviour
         else
         {
             Debug.Log("Received gift");
-            DBTask = DBreference.Child("users").Child(user.UserId).Child("coins").SetValueAsync(coins + 10);
+            DBTask = DBreference.Child("users").Child(user.UserId).Child("coins").SetValueAsync(coins);
             yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
             if (DBTask.Exception != null)
             {

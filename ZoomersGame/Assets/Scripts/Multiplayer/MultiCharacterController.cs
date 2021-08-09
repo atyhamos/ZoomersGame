@@ -4,7 +4,6 @@ using Photon.Pun;
 
 public class MultiCharacterController : MonoBehaviour
 {
-	public float maxSpeed = 400f;
 	[SerializeField] private float jumpForce = 400f;                            // Amount of force added when the player jumps.
 	[Range(0, 1)] [SerializeField] private float slideSpeed = .36f;         // Amount of maxSpeed applied to crouching movement. 1 = 100%
 	[SerializeField] private Transform groundCheck;                         // A position marking where to check if the player is grounded.
@@ -15,24 +14,25 @@ public class MultiCharacterController : MonoBehaviour
 	[SerializeField] private LayerMask m_WhatIsGround;
 	[SerializeField] private LayerMask m_WhatIsWall;
 	[SerializeField] private Animator anim;
-	const float groundedRadius = .3f; // Radius of the overlap circle to determine if grounded
-	public bool isGrounded;            // Whether or not the player is grounded.
-	public bool canDoubleJump;
-	const float ceilingRadius = .0625f; // Radius of the overlap circle to determine if the player can stand up
-	public Rigidbody2D rb;
+	[SerializeField] private float wallSlidingSpeed;
+	[SerializeField] private Transform particles;
+	private const float groundedRadius = .3f; // Radius of the overlap circle to determine if grounded
+	private const float ceilingRadius = .0625f; // Radius of the overlap circle to determine if the player can stand up
+	private bool canDoubleJump;
 	private bool m_FacingRight = true;  // For determining which way the player is currently facing.
-	public bool isTouchingFront; // Checking if there is something in front
+	private bool isTouchingFront; // Checking if there is something in front
 	private bool wallSliding;
 	private bool canWallJump = true;
-	[SerializeField] private float wallSlidingSpeed;
-	const float frontRadius = .2f; // Radius of the overlap circle to determine if player has wall in front
+	private const float frontRadius = .2f; // Radius of the overlap circle to determine if player has wall in front
 	private float slideTimer = 0f;
-	public UnityEvent OnLandEvent;
+	private float accelRatePerSec;
+	private float forwardVelocity;
+	public bool isGrounded;            // Whether or not the player is grounded.
 	public float timeZeroToMaxSpeed = 1f;
-	float accelRatePerSec;
-	float forwardVelocity;
+	public UnityEvent OnLandEvent;
 	public Transform trapPlacement;
-	public Transform particles;
+	public Rigidbody2D rb;
+	public float maxSpeed = 400f;
 
 	[System.Serializable]
 	public class BoolEvent : UnityEvent<bool> { }

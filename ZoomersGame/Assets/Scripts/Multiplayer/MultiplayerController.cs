@@ -13,26 +13,26 @@ public class MultiplayerController : MonoBehaviour
     [SerializeField] private GameObject CherryPowerButton;
     [SerializeField] private GameObject BoxPowerButton;
     [SerializeField] private GameObject FlyPowerButton;
-    public GameObject LeftRightButtons;
+    [SerializeField] private GameObject LeftRightButtons;
+    [SerializeField] private GameObject PlayerButtons, PlaceholderButtons;
+    [SerializeField] private GameObject nameBackground;
+    [SerializeField] private SpriteRenderer Sprite;
+    [SerializeField] private List<RuntimeAnimatorController> skins;
     private Rigidbody2D rb;
     private PhotonView view;
+    private bool moveLeft, moveRight, jump, crouch;
+    private int horizontalMove;
+    private MultiplayerManager Manager;
+    public MultiPowerUp previousPowerUp, currentPowerUp;
+    public bool isReady, isHost, isLoading, lostRound, hasWon = false, jumpButtonDown;
+    public int rank = 0, wins = 0;
+    public Checkpoint currentCheckpoint;
+    public int checkpointsCrossed = 0;
+    public bool usingPowerUp;
+    public Text PlayerNameText;
+    public GameObject wings, particles;
     public GameObject PlayerCamera;
     public GameObject LeaderCamera;
-    public GameObject PlayerButtons, PlaceholderButtons;
-    public Text PlayerNameText;
-    public GameObject nameBackground;
-    public SpriteRenderer Sprite;
-    public bool usingPowerUp;
-    public MultiPowerUp previousPowerUp, currentPowerUp;
-    public bool moveLeft, moveRight, jump, crouch;
-    private int horizontalMove;
-    public int checkpointsCrossed = 0;
-    public Checkpoint currentCheckpoint;
-    public int rank = 0, wins = 0;
-    public MultiplayerManager Manager;
-    public bool isReady, isHost, isLoading, lostRound, hasWon = false, jumpButtonDown;
-    public List<RuntimeAnimatorController> skins;
-    public GameObject wings, particles;
 
     private void Awake()
     {
